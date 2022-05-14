@@ -1,10 +1,11 @@
-package message;
+package message.header;
 
 /**
  * @author Kevin
  * @Description
  */
 public class ResponseHeader extends Header {
+
     int statusCode;
     String phrase;
 
@@ -18,8 +19,5 @@ public class ResponseHeader extends Header {
         this.phrase = phrase;
     }
 
-    public String getResponseLine(){
-        return version + ' ' + statusCode + ' ' + phrase;
-    }
 
 }

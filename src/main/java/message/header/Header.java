@@ -1,10 +1,12 @@
-package message;
+package message.header;
 
 import lombok.Data;
 import lombok.ToString;
+import util.InputStreamReaderHelper;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Kevin
@@ -13,13 +15,15 @@ import java.util.List;
 @Data
 @ToString
 public class Header {
-    public String version = "HTTP/1.1";
+//    public String version = "HTTP/1.1";
 
     private HashMap<String, String> header = new LinkedHashMap<>();
 //    头部的长度。
     private long contentLength = 0;
 
+    public Header(){
 
+    }
     /**
      * @param inputStream
      * @throws IOException
@@ -31,11 +35,15 @@ public class Header {
         while (!(temp= InputStreamReaderHelper.readLine(inputStream)).equals("")){
             headers.add(temp);
         }
-       Header(headers);
+        constructHelper(headers);
     }
 
 
     public Header(List<String> headers){
+        constructHelper(headers);
+    }
+
+    private void constructHelper(List<String> headers){
         for(String header:headers){
             String formattedHeader = header.trim();
             if(formattedHeader.equals("")){
@@ -49,14 +57,14 @@ public class Header {
             String fieldName = formattedHeader.substring(0,index).trim();
 
             if(fieldName.equalsIgnoreCase("Content-Length")){
-                this.contentLength = Long.parseLong(value);
+
+//                this.contentLength = Long.parseLong(value);
             }
 
             String fieldValue = formattedHeader.substring(index+1).trim();
             this.header.put(fieldName,fieldValue);
         }
     }
-
 
 
 
