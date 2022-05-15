@@ -2,7 +2,7 @@ package message.header;
 
 import lombok.Data;
 import lombok.ToString;
-import util.InputStreamReaderHelper;
+import util.InputStreamHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ public class Header {
 
     private HashMap<String, String> header = new LinkedHashMap<>();
 //    头部的长度。
-    private long contentLength = 0;
+    public long contentLength = 0;
 
     public Header(){
 
@@ -32,7 +32,7 @@ public class Header {
     public Header(InputStream inputStream) throws IOException {
         List<String> headers = new ArrayList<>();
         String temp;
-        while (!(temp= InputStreamReaderHelper.readLine(inputStream)).equals("")){
+        while (!(temp= InputStreamHelper.readLine(inputStream)).equals("")){
             headers.add(temp);
         }
         constructHelper(headers);
@@ -42,6 +42,8 @@ public class Header {
     public Header(List<String> headers){
         constructHelper(headers);
     }
+
+
 
     private void constructHelper(List<String> headers){
         for(String header:headers){

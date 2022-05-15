@@ -8,7 +8,7 @@ import java.io.InputStream;
  * @author Kevin
  * @Description
  */
-public class InputStreamReaderHelper {
+public class InputStreamHelper {
 
     public static String readLine(InputStream inputStream) {
         byte  [] temp=new byte[1024];

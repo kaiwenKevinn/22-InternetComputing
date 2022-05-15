@@ -30,7 +30,7 @@ public class Body {
             String contentEncoding = messageHeader.get("Content-Encoding");
 //            if(contentEncoding!=null&&contentEncoding.equals("gzip")){
 //                GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(b));
-//                b = InputStreamReaderHelper.readInputStream(gzipInputStream);
+//                b = InputStreamHelper.readInputStream(gzipInputStream);
 //            }
         }else if(contentLength!=0){
             b = ByteReader.readByte(inputStream,contentLength);

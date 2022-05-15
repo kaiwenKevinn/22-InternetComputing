@@ -5,7 +5,7 @@ package client;
  * @Description
  */
 abstract public class Client {
-    private String HOSTNAME;
-    private int port;
+    public String host;
+    public int port;
 
 }
