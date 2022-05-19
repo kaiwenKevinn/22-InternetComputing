@@ -27,6 +27,8 @@ public class NormalClient extends Client{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //封装将要发送的请求
         RequestLine requestLine=new RequestLine("GET",uri);
         Header requestHeader=new Header();
         requestHeader.put("Accept", "*/*");
@@ -60,7 +62,25 @@ public class NormalClient extends Client{
 
 //        printYellow();
         String toBePrint= new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode),responseLine.description,responseHeader.getHeader()));
+        System.out.println(toBePrint);
         String receiveMIMEType = responseHeader.getHeader().get("Content-Type");
+        switch(responseLine.statusCode){
+            case 404://未找到
+            case 200: //成功
+            case 301://301 永久重定向
+            case 302: // 302临时重定向
+        }
 
+        if(socket != null) {
+            socket.close();
+        }
+    }
+    public HttpResponse sendHttpRequest(HttpRequest request) {
+        HttpResponse response=null;
+        HttpRequest handledRequest = requestHandler.handle(request);
+
+
+
+        return null;
     }
 }

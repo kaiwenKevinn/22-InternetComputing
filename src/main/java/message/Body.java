@@ -37,4 +37,7 @@ public class Body {
         }
         this.body = b;
     }
+    public Body(){
+
+    }
 }
