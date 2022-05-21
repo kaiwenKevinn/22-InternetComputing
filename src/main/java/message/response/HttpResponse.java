@@ -5,7 +5,8 @@ import lombok.Data;
 import lombok.ToString;
 import message.Body;
 import message.header.ResponseHeader;
-import sun.net.www.MessageHeader;
+
+import util.FileUtil;
 
 import java.io.*;
 import java.util.Arrays;
@@ -60,5 +61,9 @@ public class HttpResponse {
             }
 
         }
+    }
+
+    public void saveBody(String path) throws IOException {
+        FileUtil.save(messageBody.getBody(),path);
     }
 }

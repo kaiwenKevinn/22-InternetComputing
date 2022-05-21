@@ -4,13 +4,16 @@ import message.Body;
 import message.header.Header;
 import message.request.HttpRequest;
 import message.request.RequestLine;
+import message.response.HttpResponse;
+
+import java.io.IOException;
 
 /**
  * @author Kevin
  * @Description
  */
 public class ClientMain {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         RequestLine requestLine=new RequestLine("GET","/");
         Header header=new Header();
@@ -23,6 +26,7 @@ public class ClientMain {
         HttpRequest request = new HttpRequest(requestLine, header, body);
         Client client=new NormalClient();
 
-        client.sendHttpRequest(request);
+        HttpResponse response = client.sendHttpRequest(request);
+        response.saveBody("xxx.html");
     }
 }

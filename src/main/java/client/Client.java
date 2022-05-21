@@ -12,10 +12,8 @@ import message.response.HttpResponse;
 abstract public class Client {
     public String host;
     public int port;
-    RequestHandler requestHandler;
-    ResponseHandler responseHandler ;
-
-
+    RequestHandler requestHandler=new RequestHandler();
+    ResponseHandler responseHandler =new ResponseHandler();
 
     public abstract HttpResponse sendHttpRequest(HttpRequest request);
 }

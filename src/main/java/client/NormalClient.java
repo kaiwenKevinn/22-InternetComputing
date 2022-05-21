@@ -78,9 +78,7 @@ public class NormalClient extends Client{
     public HttpResponse sendHttpRequest(HttpRequest request) {
         HttpResponse response=null;
         HttpRequest handledRequest = requestHandler.handle(request);
-
-
-
+        response=responseHandler.handle(request);
         return null;
     }
 }

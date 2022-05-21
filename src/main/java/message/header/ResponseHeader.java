@@ -1,5 +1,8 @@
 package message.header;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * @author Kevin
  * @Description
@@ -20,4 +23,7 @@ public class ResponseHeader extends Header {
     }
 
 
+    public ResponseHeader(InputStream inputStream) throws IOException {
+        super(inputStream);
+    }
 }
