@@ -6,7 +6,7 @@ import message.request.HttpRequest;
 
 /**
  * @author Kevin
- * @Description
+ * @Description  对即将传递给服务器端的请求报文做处理
  */
 public class RequestHandler implements Handler {
 

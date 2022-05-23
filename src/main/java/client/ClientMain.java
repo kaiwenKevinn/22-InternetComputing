@@ -6,7 +6,9 @@ import message.request.HttpRequest;
 import message.request.RequestLine;
 import message.response.HttpResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  * @author Kevin
@@ -14,19 +16,18 @@ import java.io.IOException;
  */
 public class ClientMain {
     public static void main(String[] args) throws IOException {
+        int port=8080;
+        String host="127.0.0.1";
+//        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+//        System.out.println("请输入服务器host");
+//        host=bf.readLine();
+//        System.out.println("请输入port");
+//        port= Integer.parseInt(bf.readLine());
 
-        RequestLine requestLine=new RequestLine("GET","/");
-        Header header=new Header();
-        header.put("Host","www.baidu.com");
-        header.put("Accept","*/*");
-        header.put("Connection","keep-alive");
-        header.put("Accept-Encoding","gzip, deflate, br");
 
-        Body body=new Body();
-        HttpRequest request = new HttpRequest(requestLine, header, body);
-        Client client=new NormalClient();
+        Client client=new NormalClient(port,host);
 
-        HttpResponse response = client.sendHttpRequest(request);
-        response.saveBody("xxx.html");
+        client.Get("www.baidu.com");
+//        response.saveBody("xxx.html");
     }
 }

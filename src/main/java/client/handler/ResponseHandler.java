@@ -15,7 +15,7 @@ import java.io.InputStream;
 
 /**
  * @author Kevin
- * @Description
+ * @Description  对从服务器端收到的相应报文做处理
  */
 public class ResponseHandler implements Handler{
 

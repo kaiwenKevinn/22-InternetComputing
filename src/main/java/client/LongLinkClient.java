@@ -8,9 +8,10 @@ import message.response.HttpResponse;
  * @Description
  */
 public class LongLinkClient extends Client{
-
     @Override
-    public HttpResponse sendHttpRequest(HttpRequest request) {
-        return null;
+    public void Get(String uri) {
+
     }
+
+
 }
