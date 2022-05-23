@@ -1,5 +1,7 @@
 package server;
 
+import server.handler.RequestHandler;
+
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,14 +14,19 @@ public class NormalServer extends Server {
     }
 
     public void start() throws Exception {
-        ServerSocket server = new ServerSocket();
+        ServerSocket serverSocket = new ServerSocket();
         // TODO: check validity for hostname and port
-        server.bind(new InetSocketAddress(hostname, port)); // note: here duck exception
-        System.out.println("Server init successfully."); // stderr
+        serverSocket.bind(new InetSocketAddress(hostname, port)); // note: here duck exception
+        System.out.println("Server init successfully."); // stderr ?
 
-        while (true) {
-            Socket socket = server.accept();
+        while (isNormal) {
+            Socket socket = serverSocket.accept();
+            InetSocketAddress address = (InetSocketAddress) socket.getRemoteSocketAddress();
+            System.out.println("Server received request");
+            System.out.println(address.getHostName());
 
+            RequestHandler handler = new RequestHandler(socket); // for multi-thread usage
+            handler.start();
         }
     }
 }

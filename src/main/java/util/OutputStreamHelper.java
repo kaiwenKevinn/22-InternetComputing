@@ -21,15 +21,15 @@ public class OutputStreamHelper {
         resStringBuilder.append(param2);
         resStringBuilder.append(' ');
         resStringBuilder.append(param3);
-        resStringBuilder.append("\r\n");
+        resStringBuilder.append(System.lineSeparator());
         for (String key : headerFields.keySet()
         ) {
             resStringBuilder.append(key);
             resStringBuilder.append(": ");
             resStringBuilder.append(headerFields.get(key));
-            resStringBuilder.append("\r\n");
+            resStringBuilder.append(System.lineSeparator());
         }
-        resStringBuilder.append("\r\n");
+        resStringBuilder.append(System.lineSeparator());
         return resStringBuilder.toString().getBytes();
     }
 }
