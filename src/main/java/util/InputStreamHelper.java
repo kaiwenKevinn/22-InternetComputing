@@ -11,26 +11,25 @@ import java.io.InputStream;
 public class InputStreamHelper {
 
     public static String readLine(InputStream inputStream) {
-        byte  [] temp=new byte[1024];
-        BufferedInputStream bufferedInputStream=new BufferedInputStream(inputStream);
+        byte[] temp = new byte[1024];
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
         int eachChar;
         try {
-            int times=0;
+            int times = 0;
 //            循环读取，直到\n
-            while(true){
-                eachChar=bufferedInputStream.read();
-                if((char)eachChar=='\n'){
-                    return new String(new String(temp,0,times));
-                }
-                else {
-                    temp[times]= (byte) eachChar;
+            while (true) {
+                eachChar = bufferedInputStream.read();
+                if ((char) eachChar == '\n') {
+                    return new String(new String(temp, 0, times));
+                } else {
+                    temp[times] = (byte) eachChar;
                     times++;
                 }
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 bufferedInputStream.close();
             } catch (IOException e) {
@@ -40,14 +39,14 @@ public class InputStreamHelper {
         return null;
     }
 
-    public static byte[] readAllFromInputStream(InputStream inputStream){
-        BufferedInputStream bis=new BufferedInputStream(inputStream);
-        byte [] ans=new byte[1024];
+    public static byte[] readAllFromInputStream(InputStream inputStream) {
+        BufferedInputStream bis = new BufferedInputStream(inputStream);
+        byte[] ans = new byte[1024];
         try {
             bis.read(ans);
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 bis.close();
             } catch (IOException e) {

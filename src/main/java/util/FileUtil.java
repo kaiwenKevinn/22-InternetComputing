@@ -9,8 +9,8 @@ import java.io.IOException;
  * @Description
  */
 public class FileUtil {
-    public static void save(byte[]data,String path) throws IOException {
-        FileOutputStream fis=new FileOutputStream(path);
+    public static void save(byte[] data, String path) throws IOException {
+        FileOutputStream fis = new FileOutputStream(path);
         fis.write(data);
         fis.close();
     }
