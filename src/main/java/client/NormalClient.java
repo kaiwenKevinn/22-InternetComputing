@@ -1,5 +1,6 @@
 package client;
 
+import client.cache.ClientRedirectCache;
 import message.header.Header;
 import message.header.ResponseHeader;
 import message.request.HttpRequest;
@@ -22,7 +23,9 @@ import java.util.HashMap;
  * @Description
  */
 public class NormalClient extends Client {
- private NormalClient(){
+    private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
+
+    private NormalClient(){
 
     }
 public NormalClient(int port,String host){
@@ -89,8 +92,18 @@ public NormalClient(int port,String host){
 //                    String responseString = new String(charArray.toCharArray());
 //                    System.out.println(responseString);
                 }
+                break;
             case 301://301 永久重定向
+                String trueURI = responseHeader.get("Location");
+                redirectCache.put(host+':'+port+uri, trueURI);
+                System.out.println("你将被301重定向至" + trueURI);
+                Get(trueURI); // 跳转
+                break;
             case 302: // 302临时重定向
+                trueURI = responseHeader.get("Location");
+                System.out.println("你将被302重定向至" + trueURI);
+                Get(trueURI); // 跳转
+                break;
         }
 
         if (socket != null) {
