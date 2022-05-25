@@ -18,7 +18,7 @@ public class RequestHandler extends Thread implements Handler {
     @Override
     public void run() {
         // TODO
-        // readRequest() -> handle() -> sendRequest()
+        // readRequest() -> handle() -> sendResponse()
     }
 
     private HttpRequest readRequest() {

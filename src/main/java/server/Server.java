@@ -1,5 +1,7 @@
 package server;
 
+import java.net.ServerSocket;
+
 /**
  * @author czh
  * @Description Abstract class for HttpServer，extended by NormalServer and LongLinkServer
