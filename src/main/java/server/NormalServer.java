@@ -5,6 +5,7 @@ import server.handler.RequestHandler;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
 
 public class NormalServer extends Server {
 
@@ -19,7 +20,6 @@ public class NormalServer extends Server {
         serverSocket.bind(new InetSocketAddress(hostname, port)); // note: here duck exception
 
         System.out.println("Server init successfully."); // stderr ?
-
         while (isNormal) {
             Socket socket = serverSocket.accept();
             InetSocketAddress address = (InetSocketAddress) socket.getRemoteSocketAddress();

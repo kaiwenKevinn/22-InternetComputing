@@ -26,7 +26,7 @@ import java.util.HashMap;
 public class NormalClient extends Client {
 
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
-
+    private static ConnectionPool pool = new ConnectionPool();
     private NormalClient() {
 
     }
@@ -40,7 +40,7 @@ public class NormalClient extends Client {
         Socket socket = null;
 
         try {
-            socket = new Socket(this.host, this.port);
+            socket = pool.getSocket(host, port);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -55,11 +55,6 @@ public class NormalClient extends Client {
         //处理返回请求
         InputStream inputStream = socket.getInputStream();
         handleGet(inputStream, uri);
-
-
-        if (socket != null && !persistent) {
-            socket.close();
-        }
     }
 
     /**
@@ -80,7 +75,7 @@ public class NormalClient extends Client {
         }
         if(persistent) {
             requestHeader.put("Connection", "Keep-Alive");
-            long defaultDelay = 30;
+            long defaultDelay = 300;
             requestHeader.put("Keep-Alive", "timeout="+defaultDelay * 1000L);
         } else requestHeader.put("Connection", "close");
 
@@ -106,7 +101,7 @@ public class NormalClient extends Client {
         String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
         System.out.println(toBePrint);
         String receiveMIMEType = responseHeader.getHeader().get("Content-Type");
-        boolean persistent = responseHeader.getHeader().get("Connection").equals("keep-alive");
+        boolean persistent = "Keep-Alive".equals(responseHeader.getHeader().get("Connection"));
         switch (responseLine.statusCode) {
             case 404://未找到
             case 200: //成功

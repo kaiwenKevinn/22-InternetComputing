@@ -13,7 +13,7 @@ abstract public class Client {
     public int port;
     ResponseHandler responseHandler =new ResponseHandler();
 
-    //public abstract void Get(String uri) throws IOException;
+    public abstract void Get(String uri, boolean persistent) throws IOException;
 
 //    public abstract HttpResponse sendHttpRequest(HttpRequest request);
 }

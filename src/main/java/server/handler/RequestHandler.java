@@ -46,7 +46,7 @@ public class RequestHandler extends Thread implements Handler {
             if(isTimeout){
                 try {
                     socket.close();
-                    System.out.println("connection closed due to timeout...");
+                    return;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -56,7 +56,8 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 httpRequest = readRequest();
             } catch (IOException e) {
-                System.out.println("Cannot read Request");
+                continue;
+                //System.out.println("Cannot read Request");
             }
 
             //handle persistent connection
@@ -76,7 +77,7 @@ public class RequestHandler extends Thread implements Handler {
             System.out.println("---->>>>send finished<<<<----");
 
             //non-persistent connection, break out
-            if(!httpRequest.getHeader().get("Connection").equals("Keep-Alive")){
+            if(httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))){
                 break;
             }
         }
@@ -106,7 +107,8 @@ public class RequestHandler extends Thread implements Handler {
         Body body=new Body();//construct Request
         for(int i=1;i<HeaderSplit.length;i++){
             String singleItem=HeaderSplit[i];
-            header.put(singleItem.split(":")[0],singleItem.split(":")[1]);
+            String[] temp = singleItem.split(":");
+            header.put(temp[0],temp[1].trim());
         }
 
         System.out.println("request is :");
@@ -130,7 +132,7 @@ public class RequestHandler extends Thread implements Handler {
 //        byte[] data = new byte[0];
         InputStream in = null;
         int statusCode=0;
-
+        boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
 
         if (isDown) {
              statusCode = 500;
@@ -138,7 +140,7 @@ public class RequestHandler extends Thread implements Handler {
              responseLine.description="服务器已经关闭";
              String location=BIND_DIR + SERVER_ERROR_RES;
             // todo 得到报错的500.html
-            sendResponse(socket,statusCode,location);
+            sendResponse(socket,statusCode,location, persistent);
             return;
         }
 
@@ -149,19 +151,19 @@ public class RequestHandler extends Thread implements Handler {
                 statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
                 String Location = redirectQuery.substring(3);
                 uri = Location;
-                sendResponse(socket,statusCode,BIND_DIR + Location);
+                sendResponse(socket,statusCode,BIND_DIR + Location, persistent);
             }
 
             else { //直接访问文件的情形
                 statusCode=200;
                 String Location =BIND_DIR+uri;
-                sendResponse(socket,statusCode,Location);
+                sendResponse(socket,statusCode,Location, persistent);
             }
             }
 
     }
 
-    private void sendResponse(Socket socket, int statusCode, String location) {
+    private void sendResponse(Socket socket, int statusCode, String location, boolean persistent) {
         String trueUri=location.substring(location.lastIndexOf("/"));
         byte[] data = new byte[0];
         try {
@@ -170,7 +172,7 @@ public class RequestHandler extends Thread implements Handler {
         catch (FileNotFoundException e) {
             System.out.println(location+"文件未找到");
             statusCode = 404;
-            sendResponse(socket,404,BIND_DIR + NOT_FOUND_RES);
+            sendResponse(socket,404,BIND_DIR + NOT_FOUND_RES, persistent);
         }
         int dataLen=data.length;
         String Content_Type=MIMEList.getMIMEType(location);
@@ -194,8 +196,8 @@ public class RequestHandler extends Thread implements Handler {
         }
         sendMessageHeader.put("Content-Length", String.valueOf(dataLen));
         sendMessageHeader.put("Content-Type", Content_Type);
+        if(persistent)sendMessageHeader.put("Connection", "Keep-Alive");
         HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body());
-
         try {
             print.write(response.toBytesFromServer());
         } catch (IOException e) {
