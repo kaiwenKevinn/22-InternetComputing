@@ -27,7 +27,7 @@ public class ClientMain {
 
         Client client=new NormalClient(port,host);
 
-        client.Get("/302origin.html");
+        //client.Get("/302origin.html");
 //        response.saveBody("xxx.html");
     }
 }

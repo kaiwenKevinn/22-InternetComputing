@@ -41,17 +41,47 @@ public class RequestHandler extends Thread implements Handler {
 
     @Override
     public void run() {
-
         // readRequest() -> handle() -> sendResponse()
-        HttpRequest httpRequest = null;
-        try {
-             httpRequest = readRequest();
-        } catch (IOException e) {
-            System.out.println("Cannot read Request");
+        while(true) {
+            if(isTimeout){
+                try {
+                    socket.close();
+                    System.out.println("connection closed due to timeout...");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            HttpRequest httpRequest = null;
+            try {
+                httpRequest = readRequest();
+            } catch (IOException e) {
+                System.out.println("Cannot read Request");
+            }
+
+            //handle persistent connection
+            if(httpRequest.getHeader().get("Keep-Alive") != null){
+                long timeout = Long.parseLong(httpRequest.getHeader().get("Keep-Alive").substring(8));
+                if(task != null)task.cancel();
+                task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        isTimeout = true;
+                    }
+                };
+                timer.schedule(task, timeout * 1000L);
+            }
+
+            handle(httpRequest);
+            System.out.println("---->>>>send finished<<<<----");
+
+            //non-persistent connection, break out
+            if(!httpRequest.getHeader().get("Connection").equals("Keep-Alive")){
+                break;
+            }
         }
 
-        handle(httpRequest);
-        System.out.println("---->>>>send finished<<<<----");
+        System.out.println("non-persistent connection closed....");
     }
 
     private HttpRequest readRequest() throws IOException {
