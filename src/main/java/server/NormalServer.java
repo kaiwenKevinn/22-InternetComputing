@@ -17,6 +17,7 @@ public class NormalServer extends Server {
         ServerSocket serverSocket = new ServerSocket();
         // TODO: check validity for hostname and port
         serverSocket.bind(new InetSocketAddress(hostname, port)); // note: here duck exception
+
         System.out.println("Server init successfully."); // stderr ?
 
         while (isNormal) {

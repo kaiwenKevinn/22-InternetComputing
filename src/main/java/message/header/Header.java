@@ -41,6 +41,7 @@ public class Header {
         constructHelper(headers);
     }
 
+
     private void constructHelper(List<String> headers) {
         for (String header : headers) {
             String formattedHeader = header.trim();

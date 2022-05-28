@@ -39,4 +39,13 @@ public class ResponseLine {
             this.description = responseLineString.substring(index+1);
         }
     }
+
+    public ResponseLine(int statusCode, String phrase) {
+        this.statusCode=statusCode;
+        this.description=phrase;
+    }
+
+    public ResponseLine() {
+
+    }
 }

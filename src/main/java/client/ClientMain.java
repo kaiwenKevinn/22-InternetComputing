@@ -16,7 +16,7 @@ import java.io.InputStreamReader;
  */
 public class ClientMain {
     public static void main(String[] args) throws IOException {
-        int port=8080;
+        int port=808;
         String host="127.0.0.1";
 //        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
 //        System.out.println("请输入服务器host");
@@ -27,7 +27,7 @@ public class ClientMain {
 
         Client client=new NormalClient(port,host);
 
-        client.Get("www.baidu.com");
+        client.Get("/index.html");
 //        response.saveBody("xxx.html");
     }
 }

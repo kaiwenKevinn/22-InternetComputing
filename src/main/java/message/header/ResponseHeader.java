@@ -27,4 +27,8 @@ public class ResponseHeader extends Header {
     public ResponseHeader(InputStream inputStream) throws IOException {
         super(inputStream);
     }
+
+    public ResponseHeader() {
+
+    }
 }
