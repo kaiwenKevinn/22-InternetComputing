@@ -9,6 +9,7 @@ import message.request.RequestLine;
 import message.response.HttpResponse;
 import message.response.ResponseLine;
 import server.redirect.RedirectList;
+import util.FileUtil;
 import util.MIMETypes;
 import util.StatusCodeAndPhrase;
 
@@ -42,7 +43,6 @@ public class RequestHandler extends Thread implements Handler {
         try {
              httpRequest = readRequest();
         } catch (IOException e) {
-//            e.printStackTrace();
             System.out.println("Cannot read Request");
         }
 
@@ -83,7 +83,7 @@ public class RequestHandler extends Thread implements Handler {
 
     }
 
-    private HttpResponse handle(HttpRequest httpRequest) {
+    private void handle(HttpRequest httpRequest) {
 
         // generate httpResponse and error handling
         // 初始化变量
@@ -93,7 +93,7 @@ public class RequestHandler extends Thread implements Handler {
         ResponseHeader header=null;
         Body body=new Body();
         String uri=httpRequest.requestLine.requestURI;
-        byte[] data = new byte[0];
+//        byte[] data = new byte[0];
         InputStream in = null;
         int statusCode=0;
 
@@ -102,68 +102,45 @@ public class RequestHandler extends Thread implements Handler {
              statusCode = 500;
              responseLine.statusCode=500;
              responseLine.description="服务器已经关闭";
+             String location=BIND_DIR + SERVER_ERROR_RES;
             // todo 得到报错的500.html
-            try {
-                data = getResAsStream(new FileInputStream(BIND_DIR + SERVER_ERROR_RES));
-            } catch (FileNotFoundException e) {
-                System.out.println(BIND_DIR + SERVER_ERROR_RES+"文件未找到");
-                e.printStackTrace();
-            }
-            MIMEType = MIMEList.getMIMEType(BIND_DIR + SERVER_ERROR_RES);
+            sendResponse(socket,statusCode,location);
+            return;
         }
 
-        else {
+        if(!isDown) {
             String redirectQuery = redirectList.query(uri); //重定向
 
             if (!redirectQuery.equals("")) { // 有301/302跳转项目，则执行跳转
                 statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
                 String Location = redirectQuery.substring(3);
-                String trueURI = Location;
-                try {
-                    data = getResAsStream(new FileInputStream(BIND_DIR + Location));
-                } catch (FileNotFoundException e) {
-                    System.out.println(BIND_DIR + Location+"文件未找到");
-                    e.printStackTrace();
-                }
-                MIMEType = MIMEList.getMIMEType(BIND_DIR + Location);
+                uri = Location;
+                sendResponse(socket,statusCode,BIND_DIR + Location);
             }
 
             else { //直接访问文件的情形
-                try {
-                    in = new FileInputStream(BIND_DIR+uri);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                }
+                statusCode=200;
+                String Location =BIND_DIR+uri;
+                sendResponse(socket,statusCode,Location);
+            }
             }
 
-        if (in == null) { // 找不到资源，按照404处理
-            statusCode = 404;
-
-            try {
-                data = getResAsStream(new FileInputStream(BIND_DIR + NOT_FOUND_RES));
-            } catch (FileNotFoundException e) {
-                System.out.println(BIND_DIR + NOT_FOUND_RES+"文件未找到");
-                e.printStackTrace();
-            }
-
-            MIMEType = MIMEList.getMIMEType(BIND_DIR + NOT_FOUND_RES);
-        }
-        else {  //找到了资源
-            statusCode = 200;
-            data = getResAsStream(in);
-            MIMEType = MIMEList.getMIMEType(uri);
-        }
-
-        int dataLen = data.length;
-        sendResponse(socket,data,MIMEType,dataLen,statusCode,uri);
-        return null;
     }
 
-    private void sendResponse(Socket socket, byte [] data,
-                              String Content_Type,int dataLen,int statusCode,String trueURI) {
+    private void sendResponse(Socket socket, int statusCode, String location) {
+        String trueUri=location.substring(location.lastIndexOf("/"));
+        byte[] data = new byte[0];
+        try {
+            data = FileUtil.readFromFile(location);
+        }
+        catch (FileNotFoundException e) {
+            System.out.println(location+"文件未找到");
+            statusCode = 404;
+            sendResponse(socket,404,BIND_DIR + NOT_FOUND_RES);
+        }
+        int dataLen=data.length;
+        String Content_Type=MIMEList.getMIMEType(location);
 
-        // send httpResponse
         OutputStream os = null;
         try {
             os = socket.getOutputStream();
@@ -179,7 +156,7 @@ public class RequestHandler extends Thread implements Handler {
 
         sendMessageHeader.put("Server", "WeDoRay-HttpServer");
         if(statusCode == 301 || statusCode == 302){
-            sendMessageHeader.put("Location", trueURI);
+            sendMessageHeader.put("Location", trueUri);
         }
         sendMessageHeader.put("Content-Length", String.valueOf(dataLen));
         sendMessageHeader.put("Content-Type", Content_Type);
