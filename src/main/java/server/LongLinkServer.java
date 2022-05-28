@@ -9,8 +9,6 @@ public class LongLinkServer extends Server {
     public LongLinkServer(String hostname, int port){
         this.hostname = hostname;
         this.port = port;
-        timeout = false;
-        timer = new Timer("timer");
     }
 
     @Override
@@ -20,9 +18,7 @@ public class LongLinkServer extends Server {
 
         //TODO
         //2. start loop
-        //2.1 check if timeout, if timeout, close connection
-        //2.2 handle request
-        //2.3 reset timer
+
     }
 
 

@@ -14,6 +14,8 @@ import util.StatusCodeAndPhrase;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static server.ServerMain.*;
 import static util.InputStreamHelper.getResAsStream;
@@ -28,7 +30,9 @@ public class RequestHandler extends Thread implements Handler {
     private static RedirectList redirectList = RedirectList.getRedirectList();
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
-
+    private Timer timer = new Timer("timer");
+    private boolean isTimeout;
+    private TimerTask task;
 
     public RequestHandler(Socket socket) {
         this.socket = socket;
@@ -36,18 +40,47 @@ public class RequestHandler extends Thread implements Handler {
 
     @Override
     public void run() {
+        while(true) {
 
-        // readRequest() -> handle() -> sendResponse()
-        HttpRequest httpRequest = null;
-        try {
-             httpRequest = readRequest();
-        } catch (IOException e) {
+            //release persistent connection if timeout
+            if(isTimeout){
+                try {
+                    socket.close();
+                    return;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.out.println("error closing socket...");
+                }
+            }
+
+            // readRequest() -> handle() -> sendResponse()
+            HttpRequest httpRequest = null;
+            try {
+                httpRequest = readRequest();
+            } catch (IOException e) {
 //            e.printStackTrace();
-            System.out.println("Cannot read Request");
-        }
+                System.out.println("Cannot read Request");
+            }
 
-        handle(httpRequest);
-        System.out.println("---->>>>send finished<<<<----");
+            //handle persistent connection
+            if(httpRequest.getHeader().get("Connection").equals("keep-alive")){
+                String timeoutStr = httpRequest.getHeader().get("Keep-Alive").substring(8);
+                long timeout = Long.parseLong(timeoutStr);
+                if(task != null){
+                    task.cancel();
+                }
+                task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        isTimeout = true;
+                    }
+                };
+                timer.schedule(task, timeout * 1000L);
+            }
+
+            handle(httpRequest);
+            System.out.println("---->>>>send finished<<<<----");
+        }
     }
 
     private HttpRequest readRequest() throws IOException {
@@ -64,21 +97,21 @@ public class RequestHandler extends Thread implements Handler {
         String request = new String(bos.toByteArray());
         String method = request.split("\\s+")[0];
         String uri = request.split("\\s+")[1];
-        String version=request.split("\\s+")[2];
+        String version = request.split("\\s+")[2];
         String[] HeaderSplit = request.split(System.lineSeparator());
 
-        RequestLine requestLine=new RequestLine(method,uri); //default get
-        Header header=new Header();
-        Body body=new Body();//construct Request
-        for(int i=1;i<HeaderSplit.length;i++){
-            String singleItem=HeaderSplit[i];
-            header.put(singleItem.split(":")[0],singleItem.split(":")[1]);
+        RequestLine requestLine = new RequestLine(method, uri); //default get
+        Header header = new Header();
+        Body body = new Body();//construct Request
+        for (int i = 1; i < HeaderSplit.length; i++) {
+            String singleItem = HeaderSplit[i];
+            header.put(singleItem.split(":")[0], singleItem.split(":")[1]);
         }
 
         System.out.println("request is :");
         System.out.println(request);
 
-        HttpRequest httpRequest=new HttpRequest(requestLine,header,body);
+        HttpRequest httpRequest = new HttpRequest(requestLine, header, body);
         return httpRequest;
 
     }
@@ -89,30 +122,28 @@ public class RequestHandler extends Thread implements Handler {
         // 初始化变量
         String MIMEType;
         System.out.println("---->>>>send response<<<<----");
-        ResponseLine responseLine=null;
-        ResponseHeader header=null;
-        Body body=new Body();
-        String uri=httpRequest.requestLine.requestURI;
+        ResponseLine responseLine = null;
+        ResponseHeader header = null;
+        Body body = new Body();
+        String uri = httpRequest.requestLine.requestURI;
         byte[] data = new byte[0];
         InputStream in = null;
-        int statusCode=0;
+        int statusCode = 0;
 
 
         if (isDown) {
-             statusCode = 500;
-             responseLine.statusCode=500;
-             responseLine.description="服务器已经关闭";
+            statusCode = 500;
+            responseLine.statusCode = 500;
+            responseLine.description = "服务器已经关闭";
             // todo 得到报错的500.html
             try {
                 data = getResAsStream(new FileInputStream(BIND_DIR + SERVER_ERROR_RES));
             } catch (FileNotFoundException e) {
-                System.out.println(BIND_DIR + SERVER_ERROR_RES+"文件未找到");
+                System.out.println(BIND_DIR + SERVER_ERROR_RES + "文件未找到");
                 e.printStackTrace();
             }
             MIMEType = MIMEList.getMIMEType(BIND_DIR + SERVER_ERROR_RES);
-        }
-
-        else {
+        } else {
             String redirectQuery = redirectList.query(uri); //重定向
 
             if (!redirectQuery.equals("")) { // 有301/302跳转项目，则执行跳转
@@ -122,20 +153,18 @@ public class RequestHandler extends Thread implements Handler {
                 try {
                     data = getResAsStream(new FileInputStream(BIND_DIR + Location));
                 } catch (FileNotFoundException e) {
-                    System.out.println(BIND_DIR + Location+"文件未找到");
+                    System.out.println(BIND_DIR + Location + "文件未找到");
                     e.printStackTrace();
                 }
                 MIMEType = MIMEList.getMIMEType(BIND_DIR + Location);
-            }
-
-            else { //直接访问文件的情形
+            } else { //直接访问文件的情形
                 try {
-                    in = new FileInputStream(BIND_DIR+uri);
+                    in = new FileInputStream(BIND_DIR + uri);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                }
             }
+        }
 
         if (in == null) { // 找不到资源，按照404处理
             statusCode = 404;
@@ -143,25 +172,24 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 data = getResAsStream(new FileInputStream(BIND_DIR + NOT_FOUND_RES));
             } catch (FileNotFoundException e) {
-                System.out.println(BIND_DIR + NOT_FOUND_RES+"文件未找到");
+                System.out.println(BIND_DIR + NOT_FOUND_RES + "文件未找到");
                 e.printStackTrace();
             }
 
             MIMEType = MIMEList.getMIMEType(BIND_DIR + NOT_FOUND_RES);
-        }
-        else {  //找到了资源
+        } else {  //找到了资源
             statusCode = 200;
             data = getResAsStream(in);
             MIMEType = MIMEList.getMIMEType(uri);
         }
 
         int dataLen = data.length;
-        sendResponse(socket,data,MIMEType,dataLen,statusCode,uri);
+        sendResponse(socket, data, MIMEType, dataLen, statusCode, uri);
         return null;
     }
 
-    private void sendResponse(Socket socket, byte [] data,
-                              String Content_Type,int dataLen,int statusCode,String trueURI) {
+    private void sendResponse(Socket socket, byte[] data,
+                              String Content_Type, int dataLen, int statusCode, String trueURI) {
 
         // send httpResponse
         OutputStream os = null;
@@ -175,15 +203,15 @@ public class RequestHandler extends Thread implements Handler {
         String phrase = statusCodeList.getPhrase(statusCode);
         ResponseLine responseLine = new ResponseLine(statusCode, phrase);
         PrintStream print = new PrintStream(os);
-        ResponseHeader sendMessageHeader=new ResponseHeader(statusCode,phrase);
+        ResponseHeader sendMessageHeader = new ResponseHeader(statusCode, phrase);
 
         sendMessageHeader.put("Server", "WeDoRay-HttpServer");
-        if(statusCode == 301 || statusCode == 302){
+        if (statusCode == 301 || statusCode == 302) {
             sendMessageHeader.put("Location", trueURI);
         }
         sendMessageHeader.put("Content-Length", String.valueOf(dataLen));
         sendMessageHeader.put("Content-Type", Content_Type);
-        HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body());
+        HttpResponse response = new HttpResponse(responseLine, sendMessageHeader, new Body());
 
         try {
             print.write(response.toBytesFromServer());
@@ -192,7 +220,7 @@ public class RequestHandler extends Thread implements Handler {
         }
 
         // 发送响应数据
-        for(int i = 0; i < dataLen; i++){
+        for (int i = 0; i < dataLen; i++) {
             print.write(data[i]);
         }
         try {

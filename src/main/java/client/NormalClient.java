@@ -27,13 +27,15 @@ public class NormalClient extends Client {
 
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
 
-    private NormalClient(){
+    private NormalClient() {
 
     }
-public NormalClient(int port,String host){
-    this.port=port;
-    this.host=host;
-}
+
+    public NormalClient(int port, String host) {
+        this.port = port;
+        this.host = host;
+    }
+
     public void Get(String uri) throws IOException {
         Socket socket = null;
 
@@ -48,12 +50,11 @@ public NormalClient(int port,String host){
 
         //发送http请求
         OutputStream socketOut = socket.getOutputStream();
-        socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version,request.Header.getHeader()));
+        socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
 
         //处理返回请求
         InputStream inputStream = socket.getInputStream();
-        handleGet(inputStream,uri);
-
+        handleGet(inputStream, uri);
 
 
         if (socket != null) {
@@ -63,10 +64,9 @@ public NormalClient(int port,String host){
 
     /**
      * @param uri
-     * @return
-     * 封装request，方法为GET
+     * @return 封装request，方法为GET
      */
-    private HttpRequest encapsulateRequest(String uri){
+    private HttpRequest encapsulateRequest(String uri) {
         RequestLine requestLine = new RequestLine("GET", uri);
         Header requestHeader = new Header();
         requestHeader.put("Accept", "*/*");
@@ -88,17 +88,16 @@ public NormalClient(int port,String host){
     /**
      * @param inputStream
      * @param uri
-     * @throws IOException
-     * 处理从server传过来的流
+     * @throws IOException 处理从server传过来的流
      */
-    private void handleGet(InputStream inputStream,String uri) throws IOException {
+    private void handleGet(InputStream inputStream, String uri) throws IOException {
         System.out.println("====>>>> RECEIVING MESSAGE <<<<===");
         System.out.println("---->>>> header <<<<----");
 
         HttpResponse response = new HttpResponse(inputStream, "GET");
         ResponseHeader responseHeader = response.getMessageHeader();
         ResponseLine responseLine = response.getResponseLine();
-        Body body=response.getMessageBody();
+        Body body = response.getMessageBody();
 
         String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
         System.out.println(toBePrint);
@@ -107,13 +106,13 @@ public NormalClient(int port,String host){
             case 404://未找到
             case 200: //成功
                 System.out.println("---->>>> body <<<<----");
-                if(receiveMIMEType.substring(0, 4).equals("text")) {
+                if (receiveMIMEType.substring(0, 4).equals("text")) {
                     System.out.println(new String(body.getBody()));
                 }
                 break;
             case 301://301 永久重定向
                 String trueURI = responseHeader.get("Location");
-                redirectCache.put(host+':'+port+uri, trueURI);
+                redirectCache.put(host + ':' + port + uri, trueURI);
                 System.out.println("你将被301重定向至" + trueURI);
                 Get(trueURI); // 跳转
                 break;
