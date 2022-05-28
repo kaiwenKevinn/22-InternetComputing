@@ -15,6 +15,8 @@ import util.StatusCodeAndPhrase;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static server.ServerMain.*;
 import static util.InputStreamHelper.getResAsStream;
@@ -29,7 +31,9 @@ public class RequestHandler extends Thread implements Handler {
     private static RedirectList redirectList = RedirectList.getRedirectList();
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
-
+    private Timer timer = new Timer("timer");
+    private boolean isTimeout;
+    private TimerTask task;
 
     public RequestHandler(Socket socket) {
         this.socket = socket;
