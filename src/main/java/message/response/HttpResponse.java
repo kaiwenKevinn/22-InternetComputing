@@ -46,6 +46,7 @@ public class HttpResponse {
             int lenc=0;
             while ((lenc = inputStream.read(buffer)) != -1) {
                 baos.write(buffer, 0, lenc);
+                if(lenc < 2048)break;
             }
             allInBytes=baos.toByteArray();
             buffer = baos.toByteArray();

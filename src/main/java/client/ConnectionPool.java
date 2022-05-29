@@ -11,14 +11,14 @@ public class ConnectionPool {
         Connection conn = pool.get(host);
         if(conn != null){
             if(conn.isClosed()){
-                removeConnection(host);
+                pool.remove(host);
             }else {
                 return conn;
             }
         }
         conn = new Connection(host, port, persistent);
-        conn.create();
         pool.put(host, conn);
+        conn.create();
 
         return conn;
     }
