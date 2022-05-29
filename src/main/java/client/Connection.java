@@ -5,6 +5,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+/**
+ * @author sunlifan
+ * @date 2022/5/29
+ * wrap socket in a connecion
+ */
 public class Connection {
     private Socket clientSocket;
     private InputStream recvStream;

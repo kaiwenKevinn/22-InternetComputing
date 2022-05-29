@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+/**
+ * @author sunlifan
+ * @date 2022/5/29
+ * use a connection pool to manage connection
+ */
 public class ConnectionPool {
     private HashMap<String, Connection> pool = new LinkedHashMap<>();
 
@@ -34,4 +39,5 @@ public class ConnectionPool {
         }
         pool.remove(host);
     }
+
 }

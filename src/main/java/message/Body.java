@@ -58,4 +58,6 @@ public class Body {
         }
         body= charArray.toString().getBytes(StandardCharsets.UTF_8);
     }
+
+    public byte[] toBytes(){return body;}
 }
