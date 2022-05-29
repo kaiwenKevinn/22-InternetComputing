@@ -22,7 +22,7 @@ public class HttpResponse {
     ResponseLine responseLine;
     ResponseHeader messageHeader;
     Body messageBody;
-
+    public byte[] allInBytes;//所有从server写过来的数据
 
     /**
      * @param inputStream
@@ -48,6 +48,7 @@ public class HttpResponse {
                 if(lenc>=0)
                 baos.write(buffer, 0, lenc);
             }
+            allInBytes=baos.toByteArray();
             buffer = baos.toByteArray();
             BufferedReader reader=new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
 
@@ -76,6 +77,7 @@ public class HttpResponse {
                 }
                 header = reader.readLine();
             }
+
             messageBody =new Body(reader, (int) messageHeader.getContentLength());
 
         }

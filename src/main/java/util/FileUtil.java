@@ -11,12 +11,22 @@ import static util.InputStreamHelper.getResAsStream;
  * @Description
  */
 public class FileUtil {
+
     public static void save(byte[] data, String path) throws IOException {
         FileOutputStream fis = new FileOutputStream(path);
-        fis.write(data);
-        fis.close();
+        BufferedOutputStream bos=null;
+        bos=new BufferedOutputStream(fis);
+        bos.write(data);
+        bos.flush();
+        bos.close();
     }
 
+    /**
+     * @param FileLocation
+     * @return
+     * @throws FileNotFoundException
+     * 将FileLocation以字节形式读出
+     */
     public static final  byte[] readFromFile(String FileLocation) throws FileNotFoundException {
             InputStream in=null;
             in=new FileInputStream(FileLocation);

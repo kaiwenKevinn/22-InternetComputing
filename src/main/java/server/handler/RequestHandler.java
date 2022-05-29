@@ -164,7 +164,7 @@ public class RequestHandler extends Thread implements Handler {
         }
         sendMessageHeader.put("Content-Length", String.valueOf(dataLen));
         sendMessageHeader.put("Content-Type", Content_Type);
-        HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body());
+        HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body(),new byte[2048]);
 
         try {
             print.write(response.toBytesFromServer());

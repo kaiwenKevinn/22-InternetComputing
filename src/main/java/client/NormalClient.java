@@ -8,15 +8,17 @@ import message.request.HttpRequest;
 import message.request.RequestLine;
 import message.response.HttpResponse;
 import message.response.ResponseLine;
+import util.FileUtil;
+import util.MIMETypes;
 import util.OutputStreamHelper;
 
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 
 /**
@@ -108,6 +110,16 @@ public class NormalClient extends Client {
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
                     System.out.println(new String(body.getBody()));
+                }
+                else{
+                    int lena = response.allInBytes.length;
+                    String postFix= MIMETypes.getMIMELists().getReverseMIMEType(receiveMIMEType);
+                    byte[] data = Arrays.copyOfRange(response.allInBytes,
+                            (int) (lena - responseHeader.getContentLength()), lena);
+                    String property = System.getProperty("user.dir");
+                    SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss");
+                    String storage=new String(property+File.separator+"data"+File.separator+format.format(Calendar.getInstance().getTime())+postFix);
+                    FileUtil.save(data,storage);
                 }
                 break;
             case 301://301 永久重定向

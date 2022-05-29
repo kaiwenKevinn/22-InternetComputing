@@ -27,7 +27,7 @@ public class ClientMain {
 
         Client client=new NormalClient(port,host);
 
-        client.Get("/302origin.html");
+        client.Get("/pic.png");
 //        response.saveBody("xxx.html");
     }
 }
