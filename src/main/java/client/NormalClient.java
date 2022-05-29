@@ -40,7 +40,7 @@ public class NormalClient extends Client {
         Socket socket = null;
 
         try {
-            socket = pool.getSocket(host, port);
+            socket = pool.getSocket(host, port, persistent);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -55,6 +55,7 @@ public class NormalClient extends Client {
         //处理返回请求
         InputStream inputStream = socket.getInputStream();
         handleGet(inputStream, uri);
+        if(!persistent)NormalClient.pool.removeConnection(host);
     }
 
     /**
@@ -75,8 +76,6 @@ public class NormalClient extends Client {
         }
         if(persistent) {
             requestHeader.put("Connection", "Keep-Alive");
-            long defaultDelay = 300;
-            requestHeader.put("Keep-Alive", "timeout="+defaultDelay * 1000L);
         } else requestHeader.put("Connection", "close");
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);

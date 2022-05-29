@@ -5,10 +5,13 @@ import server.handler.RequestHandler;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Time;
 import java.util.HashSet;
+import java.util.Timer;
 
 public class NormalServer extends Server {
 
+    public static Timer timer = new Timer("timer");
     public NormalServer(String hostname, int port) {
         this.hostname = hostname;
         this.port = port;

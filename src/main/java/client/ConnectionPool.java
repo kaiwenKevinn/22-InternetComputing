@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 public class ConnectionPool {
     private HashMap<String, Socket> pool = new LinkedHashMap<>();
 
-    public Socket getSocket(String host, int port) throws IOException {
+    public Socket getSocket(String host, int port, boolean persistent) throws IOException {
         Socket socket = pool.get(host);
         if(socket != null){
             if(!socket.isClosed())return socket;
@@ -16,11 +16,12 @@ public class ConnectionPool {
         }
 
         socket = new Socket(host, port);
+        socket.setKeepAlive(persistent);
         pool.put(host, socket);
         return socket;
     }
 
-    private void removeConnection(String host){
+    public void removeConnection(String host){
         pool.remove(host);
     }
 }

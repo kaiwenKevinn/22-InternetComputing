@@ -30,5 +30,13 @@ public class getTest {
             baiduGetTest();
         }
     }
-    //BUG TO BE FIXED : CONNECTION RESET
+
+    @Test
+    public void myServerNonPersistentGet() throws IOException {
+        host = "127.0.0.1";
+        port = 8080;
+        client = new NormalClient(port, host);
+        String uri = "/index.html";
+        client.Get(uri, false);
+    }
 }

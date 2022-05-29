@@ -1,5 +1,6 @@
 package server.handler;
 
+import client.NormalClient;
 import com.sun.net.httpserver.HttpServer;
 import message.Body;
 import message.header.Header;
@@ -8,6 +9,7 @@ import message.request.HttpRequest;
 import message.request.RequestLine;
 import message.response.HttpResponse;
 import message.response.ResponseLine;
+import server.NormalServer;
 import server.redirect.RedirectList;
 import util.FileUtil;
 import util.MIMETypes;
@@ -31,9 +33,8 @@ public class RequestHandler extends Thread implements Handler {
     private static RedirectList redirectList = RedirectList.getRedirectList();
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
-    private Timer timer = new Timer("timer");
-    private boolean isTimeout;
-    private TimerTask task;
+    private boolean isTimeout = false;
+    private TimerTask task = null;
 
     public RequestHandler(Socket socket) {
         this.socket = socket;
@@ -70,6 +71,7 @@ public class RequestHandler extends Thread implements Handler {
                         isTimeout = true;
                     }
                 };
+                Timer timer = NormalServer.timer;
                 timer.schedule(task, timeout * 1000L);
             }
 
