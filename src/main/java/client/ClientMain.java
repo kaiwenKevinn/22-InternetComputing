@@ -16,7 +16,7 @@ import java.io.InputStreamReader;
  */
 public class ClientMain {
     public static void main(String[] args) throws IOException {
-        int port=808;
+        int port=8080;
         String host="127.0.0.1";
 //        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
 //        System.out.println("请输入服务器host");
