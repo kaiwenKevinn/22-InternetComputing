@@ -28,7 +28,7 @@ import java.util.HashMap;
 public class NormalClient extends Client {
 
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
-
+    private static ConnectionPool pool = new ConnectionPool();
     private NormalClient() {
 
     }
@@ -38,17 +38,17 @@ public class NormalClient extends Client {
         this.host = host;
     }
 
-    public void Get(String uri) throws IOException {
+    public void Get(String uri, boolean persistent) throws IOException {
         Socket socket = null;
 
         try {
-            socket = new Socket(this.host, this.port);
+            socket = pool.getSocket(host, port, persistent);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         //封装将要发送的请求
-        HttpRequest request = encapsulateRequest(uri);
+        HttpRequest request = encapsulateRequest(uri, persistent);
 
         //发送http请求
         OutputStream socketOut = socket.getOutputStream();
@@ -57,18 +57,14 @@ public class NormalClient extends Client {
         //处理返回请求
         InputStream inputStream = socket.getInputStream();
         handleGet(inputStream, uri);
-
-
-        if (socket != null) {
-            socket.close();
-        }
+        if(!persistent)NormalClient.pool.removeConnection(host);
     }
 
     /**
      * @param uri
      * @return 封装request，方法为GET
      */
-    private HttpRequest encapsulateRequest(String uri) {
+    private HttpRequest encapsulateRequest(String uri, boolean persistent) {
         RequestLine requestLine = new RequestLine("GET", uri);
         Header requestHeader = new Header();
         requestHeader.put("Accept", "*/*");
@@ -80,7 +76,9 @@ public class NormalClient extends Client {
         } else {
             requestHeader.put("Host", host); // 访问默认端口的时候是不需要端口号的
         }
-        requestHeader.put("Connection", "Keep-Alive");
+        if(persistent) {
+            requestHeader.put("Connection", "Keep-Alive");
+        } else requestHeader.put("Connection", "close");
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);
 
@@ -104,6 +102,7 @@ public class NormalClient extends Client {
         String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
         System.out.println(toBePrint);
         String receiveMIMEType = responseHeader.getHeader().get("Content-Type");
+        boolean persistent = "Keep-Alive".equals(responseHeader.getHeader().get("Connection"));
         switch (responseLine.statusCode) {
             case 404://未找到
             case 200: //成功
@@ -126,12 +125,12 @@ public class NormalClient extends Client {
                 String trueURI = responseHeader.get("Location");
                 redirectCache.put(host + ':' + port + uri, trueURI);
                 System.out.println("你将被301重定向至" + trueURI);
-                Get(trueURI); // 跳转
+                Get(trueURI, persistent); // 跳转
                 break;
             case 302: // 302临时重定向
                 trueURI = responseHeader.get("Location");
                 System.out.println("你将被302重定向至" + trueURI);
-                Get(trueURI); // 跳转
+                Get(trueURI, persistent); // 跳转
                 break;
         }
     }

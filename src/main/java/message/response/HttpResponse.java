@@ -9,6 +9,7 @@ import message.header.ResponseHeader;
 import util.FileUtil;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.util.Arrays;
 
 /**
@@ -43,9 +44,7 @@ public class HttpResponse {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[ ]buffer=new byte[2048];
             int lenc=0;
-            while (lenc>=0) {
-                lenc = inputStream.read(buffer);
-                if(lenc>=0)
+            while ((lenc = inputStream.read(buffer)) != -1) {
                 baos.write(buffer, 0, lenc);
             }
             allInBytes=baos.toByteArray();

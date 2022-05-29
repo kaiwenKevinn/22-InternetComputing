@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="2022-NC" target="11" />
+      <module name="2022-NC" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
