@@ -28,7 +28,6 @@ public class NormalServer extends Server {
             InetSocketAddress address = (InetSocketAddress) socket.getRemoteSocketAddress();
             System.out.println("Server received request");
             System.out.println(address.getHostName());
-
             RequestHandler handler = new RequestHandler(socket); // for multi-thread usage
             handler.start();
         }

@@ -1,7 +1,5 @@
 package server.handler;
 
-import client.NormalClient;
-import com.sun.net.httpserver.HttpServer;
 import message.Body;
 import message.header.Header;
 import message.header.ResponseHeader;
@@ -21,7 +19,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static server.ServerMain.*;
-import static util.InputStreamHelper.getResAsStream;
 
 
 // czh: 我是认为这部分的职责应该交给Server，但是要多线程，所以就先这么试一下，有更好的方法吗？
