@@ -81,10 +81,10 @@ public class RequestHandler extends Thread implements Handler {
             //non-persistent connection, break out
             if(httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))){
                 break;
-            }
+            }        System.out.println("non-persistent connection closed....");
+
         }
 
-        System.out.println("non-persistent connection closed....");
     }
 
     private HttpRequest readRequest() throws IOException {
