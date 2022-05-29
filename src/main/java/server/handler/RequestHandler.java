@@ -29,7 +29,7 @@ import static util.InputStreamHelper.getResAsStream;
 
 public class RequestHandler extends Thread implements Handler {
     Socket socket;
-    private boolean isDown = false; // 模拟服务器挂掉的情况
+    private boolean isDown = true; // 模拟服务器挂掉的情况
     private static RedirectList redirectList = RedirectList.getRedirectList();
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
@@ -138,8 +138,6 @@ public class RequestHandler extends Thread implements Handler {
 
         if (isDown) {
              statusCode = 500;
-             responseLine.statusCode=500;
-             responseLine.description="服务器已经关闭";
              String location=BIND_DIR + SERVER_ERROR_RES;
             // todo 得到报错的500.html
             sendResponse(socket,statusCode,location, persistent);
@@ -192,7 +190,7 @@ public class RequestHandler extends Thread implements Handler {
         PrintStream print = new PrintStream(os);
         ResponseHeader sendMessageHeader=new ResponseHeader(statusCode,phrase);
 
-        sendMessageHeader.put("Server", "WeDoRay-HttpServer");
+        sendMessageHeader.put("Server", "2022-HttpServer");
         if(statusCode == 301 || statusCode == 302){
             sendMessageHeader.put("Location", trueUri);
         }

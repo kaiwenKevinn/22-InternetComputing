@@ -69,7 +69,7 @@ public class NormalClient extends Client {
         Header requestHeader = new Header();
         requestHeader.put("Accept", "*/*");
         requestHeader.put("Accept-Language", "zh-cn");
-        requestHeader.put("User-Agent", "WeDoRay-HTTPClient");
+        requestHeader.put("User-Agent", "2022-HTTPClient");
 
         if (port != 80 && port != 443) {
             requestHeader.put("Host", host + ':' + port);
@@ -105,6 +105,13 @@ public class NormalClient extends Client {
         boolean persistent = "Keep-Alive".equals(responseHeader.getHeader().get("Connection"));
         switch (responseLine.statusCode) {
             case 404://未找到
+                System.out.println("---->>>> body <<<<----");
+                System.out.println(new String(body.getBody()));
+                break;
+            case 500:// 服务器down掉了
+                System.out.println("---->>>> body <<<<----");
+                System.out.println(new String(body.getBody()));
+                break;
             case 200: //成功
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
