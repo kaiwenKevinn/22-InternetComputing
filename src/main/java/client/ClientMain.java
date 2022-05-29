@@ -28,7 +28,7 @@ public class ClientMain {
         Client client=new NormalClient(port,host);
 
 
-        client.Get("/pic.png",false);
+        client.Get("/index.html",true);
 
         //client.Get("/302origin.html");
 

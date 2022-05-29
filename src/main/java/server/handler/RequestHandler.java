@@ -200,7 +200,7 @@ public class RequestHandler extends Thread implements Handler {
         sendMessageHeader.put("Content-Type", Content_Type);
 
         if(persistent)sendMessageHeader.put("Connection", "Keep-Alive");
-        
+
         HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body(),new byte[2048]);
 
         try {
