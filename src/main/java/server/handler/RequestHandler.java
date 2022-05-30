@@ -133,8 +133,8 @@ public class RequestHandler extends Thread implements Handler {
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
         String method = httpRequest.getRequestLine().method;
+        int statusCode = 0;
         if ("GET".equals(method)) {
-            int statusCode = 0;
             String location = "";
             if (isDown) {
                 statusCode = 500;
@@ -153,7 +153,6 @@ public class RequestHandler extends Thread implements Handler {
             }
 
             byte[] bodyData = new byte[0];
-            String trueUri = location.substring(location.lastIndexOf("/"));
             try {
                 bodyData = FileUtil.readFromFile(location);
             } catch (FileNotFoundException ex) {
@@ -161,7 +160,6 @@ public class RequestHandler extends Thread implements Handler {
                 statusCode = 404;
                 location = BIND_DIR + NOT_FOUND_RES;
                 try {
-                    trueUri = location.substring(location.lastIndexOf("/"));
                     bodyData = FileUtil.readFromFile(location);
                 } catch (FileNotFoundException ex_) {
                     // impossible
@@ -169,11 +167,21 @@ public class RequestHandler extends Thread implements Handler {
                 }
             }
 
-            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
         } else if ("POST".equals(method)) {
             // TODO
         } else {
-            System.out.println("Server does not support this method.");
+            statusCode = 405;
+            String location = BIND_DIR + METHOD_NOT_ALLOWED_RES;
+            byte[] bodyData = new byte[0];
+            try {
+                bodyData = FileUtil.readFromFile(location);
+            } catch (IOException ex) {
+                // impossible
+                ex.printStackTrace();
+                assert (false);
+            }
+            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
         }
 
         return httpResponse;
