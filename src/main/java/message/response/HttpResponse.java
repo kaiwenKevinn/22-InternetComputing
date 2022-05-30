@@ -153,13 +153,27 @@ public class HttpResponse {
         }
         resStringBuilder.append(System.lineSeparator());
 
-        // body
-        resStringBuilder.append(new String(messageBody.getBody()));
+//        print.write(request);
 
-        return resStringBuilder.toString().getBytes();
+//        for (int i = 0; i < data.length; i++) {
+//            print.write(data[i]);
+//        }
+
+        // body
+//        resStringBuilder.append(new String(messageBody.getBody()));
+        String retStr = resStringBuilder.toString();
+        byte[] tmp = retStr.getBytes();
+        byte[] ret = new byte[tmp.length + messageBody.getBody().length];
+        for (int i = 0; i < tmp.length; i++) ret[i] = tmp[i];
+        for (int i = tmp.length; i < ret.length; i++) ret[i] = messageBody.getBody()[i - tmp.length];
+
+        return ret;
+//        return resStringBuilder.toString().getBytes();
     }
 
     public byte[] toBytesFromServer() {
+        // never called
+        assert (false);
         StringBuilder resStringBuilder = new StringBuilder();
         resStringBuilder.append(responseLine.getVersion());
         resStringBuilder.append(' ');

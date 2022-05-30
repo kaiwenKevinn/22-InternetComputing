@@ -197,15 +197,27 @@ public class RequestHandler extends Thread implements Handler {
 //        int length = httpResponse.getMessageBody().getBody().length;
 //        httpResponse.getMessageHeader().put("Content-Length", String.valueOf(data.length));
         System.out.println("---->>>>send response<<<<----");
+        PrintStream ps = null;
+        OutputStream os = null;
+        try {
+            os = socket.getOutputStream();
+            ps = new PrintStream(os);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         try {
             outToClient.write(httpResponse.toBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+//        byte[] data = httpResponse.getMessageBody().getBody();
+//        int len = data.length;
+//        for (int i = 0; i < len; i++) ps.write(data[i]);
 
         try {
             outToClient.flush();
+//            os.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
