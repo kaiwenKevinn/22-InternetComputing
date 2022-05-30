@@ -27,11 +27,10 @@ public class ClientMain {
 
         Client client=new NormalClient(port,host);
 
-
+        for (int i = 0; i < 3; i++) {
+            client.Get("/index.html",true);
+        }
         client.Get("/index.html",true);
 
-        //client.Get("/302origin.html");
-
-//        response.saveBody("xxx.html");
     }
 }

@@ -1,7 +1,5 @@
 package server.handler;
 
-import client.NormalClient;
-import com.sun.net.httpserver.HttpServer;
 import message.Body;
 import message.header.Header;
 import message.header.ResponseHeader;
@@ -21,7 +19,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static server.ServerMain.*;
-import static util.InputStreamHelper.getResAsStream;
 
 
 // czh: 我是认为这部分的职责应该交给Server，但是要多线程，所以就先这么试一下，有更好的方法吗？
@@ -35,9 +32,18 @@ public class RequestHandler extends Thread implements Handler {
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
     private TimerTask timerTask = null;
+    private BufferedReader inFromClient;
+    private DataOutputStream outToClient;
 
-    public RequestHandler(Socket socket) {
+
+    public RequestHandler(Socket socket){
         this.socket = socket;
+        try {
+            inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            outToClient = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -48,6 +54,7 @@ public class RequestHandler extends Thread implements Handler {
                 try {
                     System.out.println("Timeout, Socket closed");
                     socket.close();
+                    System.out.println("Connection closed due to timeout...");
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -56,7 +63,7 @@ public class RequestHandler extends Thread implements Handler {
 
             HttpRequest httpRequest = null;
             try {
-                httpRequest = readRequest();
+                httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
                 System.out.println("readRequest() failed, try again");
                 continue;
@@ -90,25 +97,27 @@ public class RequestHandler extends Thread implements Handler {
 
     private HttpRequest readRequest() throws IOException {
         // phrase httpRequest
-        InputStream is = socket.getInputStream();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[2048];
-        int len;
-        while ((len = is.read(buffer)) > 0) {
-            bos.write(buffer, 0, len);
-            if (len < 2048) break;
+        String line = null;
+        StringBuilder sb = new StringBuilder();
+        while((line = inFromClient.readLine()) != null){
+            sb.append(line).append(System.lineSeparator());
+            if(line.isEmpty()){
+                break;
+            }
         }
-        String request = new String(bos.toByteArray());
-        String method = request.split("\\s+")[0];
-        String uri = request.split("\\s+")[1];
-        String version = request.split("\\s+")[2];
-        String[] HeaderSplit = request.split(System.lineSeparator());
+        if(sb.toString().equals(""))return null;
+        String request = sb.toString();
+        String statusLine = request.split(System.lineSeparator())[0];
+        String[] headers = request.split(System.lineSeparator());
+        String method = statusLine.split("\\s+")[0];
+        String uri = statusLine.split("\\s+")[1];
+        String version= statusLine.split("\\s+")[2];
 
-        RequestLine requestLine = new RequestLine(method, uri); //default get
-        Header header = new Header();
-        Body body = new Body();//construct Request
-        for (int i = 1; i < HeaderSplit.length; i++) {
-            String singleItem = HeaderSplit[i];
+        RequestLine requestLine=new RequestLine(method,uri); //default get
+        Header header=new Header();
+        Body body=new Body();//construct Request
+        for(int i=1;i<headers.length;i++){
+            String singleItem=headers[i];
             String[] temp = singleItem.split(":");
             header.put(temp[0], temp[1].trim());
         }

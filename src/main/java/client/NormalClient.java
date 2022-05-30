@@ -13,9 +13,6 @@ import util.MIMETypes;
 import util.OutputStreamHelper;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -39,10 +36,10 @@ public class NormalClient extends Client {
     }
 
     public void Get(String uri, boolean persistent) throws IOException {
-        Socket socket = null;
+        Connection conn = null;
 
         try {
-            socket = pool.getSocket(host, port, persistent);
+            conn = pool.getConnection(host, port, persistent);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -51,11 +48,11 @@ public class NormalClient extends Client {
         HttpRequest request = encapsulateRequest(uri, persistent);
 
         //发送http请求
-        OutputStream socketOut = socket.getOutputStream();
+        OutputStream socketOut = conn.getSendStream();
         socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
 
         //处理返回请求
-        InputStream inputStream = socket.getInputStream();
+        InputStream inputStream = conn.getRecvStream();
         handleGet(inputStream, uri);
         if(!persistent)NormalClient.pool.removeConnection(host);
     }
@@ -78,6 +75,7 @@ public class NormalClient extends Client {
         }
         if(persistent) {
             requestHeader.put("Connection", "Keep-Alive");
+            requestHeader.put("Keep-Alive", "timeout=20");
         } else requestHeader.put("Connection", "close");
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);
@@ -115,6 +113,7 @@ public class NormalClient extends Client {
             case 200: //成功
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
+                    new String(body.getBody());
                     System.out.println(new String(body.getBody()));
                 }
                 else{
@@ -141,6 +140,4 @@ public class NormalClient extends Client {
                 break;
         }
     }
-
-
 }
