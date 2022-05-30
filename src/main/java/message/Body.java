@@ -40,6 +40,8 @@ public class Body {
         this.body = b;
     }
 
+    public Body(byte[] body) { this.body = body; }
+
     public Body() {
 
     }

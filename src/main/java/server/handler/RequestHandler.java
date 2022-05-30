@@ -31,9 +31,10 @@ public class RequestHandler extends Thread implements Handler {
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
-    private TimerTask task = null;
+    private TimerTask timerTask = null;
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
+
 
     public RequestHandler(Socket socket){
         this.socket = socket;
@@ -48,9 +49,10 @@ public class RequestHandler extends Thread implements Handler {
     @Override
     public void run() {
         // readRequest() -> handle() -> sendResponse()
-        while(true) {
-            if(isTimeout){
+        while (true) {
+            if (isTimeout) {
                 try {
+                    System.out.println("Timeout, Socket closed");
                     socket.close();
                     System.out.println("Connection closed due to timeout...");
                     return;
@@ -63,38 +65,37 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
+                System.out.println("readRequest() failed, try again");
                 continue;
-                //System.out.println("Cannot read Request");
             }
 
-            //handle persistent connection
-            if(httpRequest.getHeader().get("Keep-Alive") != null){
+            // handle persistent connection
+            if (httpRequest.getHeader().get("Keep-Alive") != null) {
                 long timeout = Long.parseLong(httpRequest.getHeader().get("Keep-Alive").substring(8));
-                if(task != null)task.cancel();
-                task = new TimerTask() {
+                if (timerTask != null) timerTask.cancel();
+                timerTask = new TimerTask() {
                     @Override
                     public void run() {
                         isTimeout = true;
                     }
                 };
                 Timer timer = NormalServer.timer;
-                timer.schedule(task, timeout * 1000L);
+                timer.schedule(timerTask, timeout * 1000L);
             }
 
-            handle(httpRequest);
-            System.out.println("---->>>>send finished<<<<----");
+            HttpResponse httpResponse = handle(httpRequest);
+            if (httpResponse != null) sendResponse(httpResponse);
 
-            //non-persistent connection, break out
-            if(httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))){
+            // non-persistent connection, break out
+            if (httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))) {
                 break;
             }
+            System.out.println("Non-persistent connection closed....");
         }
 
-        System.out.println("non-persistent connection closed....");
     }
 
     private HttpRequest readRequest() throws IOException {
-
         // phrase httpRequest
         String line = null;
         StringBuilder sb = new StringBuilder();
@@ -118,115 +119,89 @@ public class RequestHandler extends Thread implements Handler {
         for(int i=1;i<headers.length;i++){
             String singleItem=headers[i];
             String[] temp = singleItem.split(":");
-            header.put(temp[0],temp[1].trim());
+            header.put(temp[0], temp[1].trim());
         }
 
         System.out.println("request is :");
         System.out.println(request);
 
-        HttpRequest httpRequest=new HttpRequest(requestLine,header,body);
+        HttpRequest httpRequest = new HttpRequest(requestLine, header, body);
         return httpRequest;
-
     }
 
-    private void handle(HttpRequest httpRequest) {
-
-        // generate httpResponse and error handling
-        // 初始化变量
-        String MIMEType;
-        System.out.println("---->>>>send response<<<<----");
-        ResponseLine responseLine=null;
-        ResponseHeader header=null;
-        Body body=new Body();
-        String uri=httpRequest.requestLine.requestURI;
-//        byte[] data = new byte[0];
-        InputStream in = null;
-        int statusCode=0;
+    private HttpResponse handle(HttpRequest httpRequest) {
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
+        HttpResponse httpResponse = null;
+        String method = httpRequest.getRequestLine().method;
+        if ("GET".equals(method)) {
+            int statusCode = 0;
+            String location = "";
+            if (isDown) {
+                statusCode = 500;
+                location = BIND_DIR + SERVER_ERROR_RES;
+            } else {
+                String uri = httpRequest.requestLine.requestURI;
+                String redirectQuery = redirectList.query(uri);
+                if (!redirectQuery.equals("")) {
+                    // 301 / 302
+                    statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
+                    location = BIND_DIR + redirectQuery.substring(3);
+                } else {
+                    statusCode = 200;
+                    location = BIND_DIR + uri;
+                }
+            }
 
-        if (isDown) {
-             statusCode = 500;
-             String location=BIND_DIR + SERVER_ERROR_RES;
-            // todo 得到报错的500.html
-            sendResponse(socket,statusCode,location, persistent);
-            return;
+            byte[] bodyData = new byte[0];
+            String trueUri = location.substring(location.lastIndexOf("/"));
+            try {
+                bodyData = FileUtil.readFromFile(location);
+            } catch (FileNotFoundException ex) {
+                System.out.println(location + "文件未找到");
+                statusCode = 404;
+                location = BIND_DIR + NOT_FOUND_RES;
+                try {
+                    trueUri = location.substring(location.lastIndexOf("/"));
+                    bodyData = FileUtil.readFromFile(location);
+                } catch (FileNotFoundException ex_) {
+                    // impossible
+                    assert (false);
+                }
+            }
+
+            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+        } else if ("POST".equals(method)) {
+            // TODO
+        } else {
+            System.out.println("Server does not support this method.");
         }
 
-        if(!isDown) {
-            String redirectQuery = redirectList.query(uri); //重定向
-
-            if (!redirectQuery.equals("")) { // 有301/302跳转项目，则执行跳转
-                statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
-                String Location = redirectQuery.substring(3);
-                uri = Location;
-                sendResponse(socket,statusCode,BIND_DIR + Location, persistent);
-            }
-
-            else { //直接访问文件的情形
-                statusCode=200;
-                String Location =BIND_DIR+uri;
-                sendResponse(socket,statusCode,Location, persistent);
-            }
-            }
-
+        return httpResponse;
     }
 
-    private void sendResponse(Socket socket, int statusCode, String location, boolean persistent) {
-        String trueUri=location.substring(location.lastIndexOf("/"));
-        byte[] data = new byte[0];
-        try {
-            data = FileUtil.readFromFile(location);
-        }
-        catch (FileNotFoundException e) {
-            System.out.println(location+"文件未找到");
-            statusCode = 404;
-            sendResponse(socket,404,BIND_DIR + NOT_FOUND_RES, persistent);
-        }
-        int dataLen=data.length;
-        String Content_Type=MIMEList.getMIMEType(location);
-
+    private void sendResponse(HttpResponse httpResponse) {
+        System.out.println("---->>>>send response<<<<----");
         OutputStream os = null;
         try {
             os = socket.getOutputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
-        // 发送响应头
-        String phrase = statusCodeList.getPhrase(statusCode);
-        ResponseLine responseLine = new ResponseLine(statusCode, phrase);
-        PrintStream print = new PrintStream(os);
-        ResponseHeader sendMessageHeader=new ResponseHeader(statusCode,phrase);
-
-        sendMessageHeader.put("Server", "2022-HttpServer");
-        if(statusCode == 301 || statusCode == 302){
-            sendMessageHeader.put("Location", trueUri);
-        }
-        sendMessageHeader.put("Content-Length", String.valueOf(dataLen));
-        sendMessageHeader.put("Content-Type", Content_Type);
-
-        if(persistent)sendMessageHeader.put("Connection", "Keep-Alive");
-
-        HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body(),new byte[2048]);
-
+        PrintStream ps = new PrintStream(os);
         try {
-            print.write(response.toBytesFromServer());
-        } catch (IOException e) {
-            e.printStackTrace();
+            ps.write(httpResponse.toBytes());
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
-        // 发送响应数据
-        for(int i = 0; i < dataLen; i++){
-            print.write(data[i]);
-        }
         try {
             os.flush();
             os.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
-
+        System.out.println("---->>>>response sended<<<<----");
     }
-
 
 }

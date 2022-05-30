@@ -18,7 +18,6 @@ public class getTest {
         client.Get(uri, false);
     }
 
-
     @Test
     public void baiduGetTest() throws IOException {
         try {
