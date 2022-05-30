@@ -210,7 +210,6 @@ public class RequestHandler extends Thread implements Handler {
             ex.printStackTrace();
         }
         System.out.println("---->>>>response sended<<<<----");
-
     }
 
 }
