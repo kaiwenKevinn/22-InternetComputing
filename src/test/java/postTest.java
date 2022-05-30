@@ -34,7 +34,7 @@ public class postTest {
                 "Host: 127.0.0.1\n" +
                 "Content-Type: application/x-www-form-urlencoded\n" +
                 "Content-Length: 36\n" +
-                "        \n" +
+                "\n" +
                 "login=my_login&password=my_password";
         writer.write(request);
         writer.flush();
