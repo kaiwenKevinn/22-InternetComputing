@@ -61,7 +61,7 @@ public class RequestHandler extends Thread implements Handler {
 
             HttpRequest httpRequest = null;
             try {
-                httpRequest = readRequest();
+                httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
                 continue;
                 //System.out.println("Cannot read Request");

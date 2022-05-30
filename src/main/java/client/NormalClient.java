@@ -113,6 +113,7 @@ public class NormalClient extends Client {
             case 200: //成功
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
+                    new String(body.getBody());
                     System.out.println(new String(body.getBody()));
                 }
                 else{
