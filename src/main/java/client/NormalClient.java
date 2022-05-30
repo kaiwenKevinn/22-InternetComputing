@@ -75,7 +75,7 @@ public class NormalClient extends Client {
         }
         if(persistent) {
             requestHeader.put("Connection", "Keep-Alive");
-            requestHeader.put("Keep-Alive", "timeout=20");
+            requestHeader.put("Keep-Alive", "timeout=120");
         } else requestHeader.put("Connection", "close");
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);
@@ -113,8 +113,8 @@ public class NormalClient extends Client {
             case 200: //成功
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
-                    new String(body.getBody());
-                    System.out.println(new String(body.getBody()));
+                    String bodyStr = new String(body.getBody());
+                    System.out.println(bodyStr);
                 }
                 else{
                     int lena = response.allInBytes.length;

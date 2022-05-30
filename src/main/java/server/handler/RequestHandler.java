@@ -29,7 +29,9 @@ public class RequestHandler extends Thread implements Handler {
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
-    private TimerTask timerTask = null;
+
+    private static TimerTask timerTask = null;
+
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
 
@@ -52,7 +54,7 @@ public class RequestHandler extends Thread implements Handler {
                 try {
                     System.out.println("Timeout, Socket closed");
                     socket.close();
-                    System.out.println("Connection closed due to timeout...");
+    //                System.out.println("Connection closed due to timeout...");
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -63,8 +65,8 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
-//                System.out.println("readRequest() failed, try again");
-                continue;
+                System.out.println("readRequest() failed, try again");
+                return;
             }
 
             // handle persistent connection
@@ -105,11 +107,20 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-        String statusLine = request.split(System.lineSeparator())[0];
-        String[] headers = request.split(System.lineSeparator());
-        String method = statusLine.split("\\s+")[0];
-        String uri = statusLine.split("\\s+")[1];
-        String version = statusLine.split("\\s+")[2];
+// <<<<<<< server-head
+//         String statusLine = request.split(System.lineSeparator())[0];
+//         String[] headers = request.split(System.lineSeparator());
+//         String method = statusLine.split("\\s+")[0];
+//         String uri = statusLine.split("\\s+")[1];
+//         String version = statusLine.split("\\s+")[2];
+// =======
+        String[] headers = request.split("\n"); // TODO: bad '\n'
+        String startLine = headers[0];
+        String[] startLineSplit = startLine.split("\\s+");
+        String method = startLineSplit[0];
+        String uri = startLineSplit[1];
+        String version= startLineSplit[2];
+// >>>>>>> master
 
         RequestLine requestLine = new RequestLine(method, uri); //default get
         Header header = new Header();
@@ -146,6 +157,7 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private HttpResponse handle(HttpRequest httpRequest) {
+
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
         int statusCode = 0;
@@ -178,7 +190,8 @@ public class RequestHandler extends Thread implements Handler {
                 bodyData = getBodyDataFromFile(location);
                 assert (bodyData != null);
             }
-            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
+
+            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
         } else if ("POST".equals(method)) {
             // TODO
             String uri = httpRequest.requestLine.requestURI;
@@ -236,24 +249,37 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private void sendResponse(HttpResponse httpResponse) {
+//        byte []data=new byte[0];
+//        String location=httpResponse.getMessageHeader().get("Location");
+//        try {
+//            data=FileUtil.readFromFile(location);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        int length = httpResponse.getMessageBody().getBody().length;
+//        httpResponse.getMessageHeader().put("Content-Length", String.valueOf(data.length));
         System.out.println("---->>>>send response<<<<----");
+        PrintStream ps = null;
         OutputStream os = null;
         try {
             os = socket.getOutputStream();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-
-        PrintStream ps = new PrintStream(os);
-        try {
-            ps.write(httpResponse.toBytes());
+            ps = new PrintStream(os);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
         try {
-            os.flush();
-            os.close();
+            outToClient.write(httpResponse.toBytes());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+//        byte[] data = httpResponse.getMessageBody().getBody();
+//        int len = data.length;
+//        for (int i = 0; i < len; i++) ps.write(data[i]);
+
+        try {
+            outToClient.flush();
+//            os.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -81,6 +81,11 @@ public class HttpResponse {
         if (method.equals("POST")) return;//todo POST请求
 
         else {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buffer = new byte[2048];
             int lenc = 0;
@@ -88,12 +93,16 @@ public class HttpResponse {
                 baos.write(buffer, 0, lenc);
                 if(lenc < 2048)break;
             }
+//            BufferedInputStream
             allInBytes = baos.toByteArray();
             buffer = baos.toByteArray();
+
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
 
-            //读取响应行
+            //读取响应行;
             String statusLine = reader.readLine();
+            //System.out.println("debug : " + statusLine);
             String[] elements = statusLine.split("\\s+");
             String version = elements[0];
             int statusCode = Integer.parseInt(elements[1]);
@@ -144,28 +153,44 @@ public class HttpResponse {
         }
         resStringBuilder.append(System.lineSeparator());
 
-        // body
-        resStringBuilder.append(new String(messageBody.getBody()));
+//        print.write(request);
 
-        return resStringBuilder.toString().getBytes();
+//        for (int i = 0; i < data.length; i++) {
+//            print.write(data[i]);
+//        }
+
+        // body
+//        resStringBuilder.append(new String(messageBody.getBody()));
+        String retStr = resStringBuilder.toString();
+        byte[] tmp = retStr.getBytes();
+        byte[] ret = new byte[tmp.length + messageBody.getBody().length];
+        for (int i = 0; i < tmp.length; i++) ret[i] = tmp[i];
+        for (int i = tmp.length; i < ret.length; i++) ret[i] = messageBody.getBody()[i - tmp.length];
+
+        return ret;
+//        return resStringBuilder.toString().getBytes();
     }
 
     public byte[] toBytesFromServer() {
+        // never called
+        assert (false);
         StringBuilder resStringBuilder = new StringBuilder();
         resStringBuilder.append(responseLine.getVersion());
         resStringBuilder.append(' ');
         resStringBuilder.append(responseLine.getStatusCode());
         resStringBuilder.append(' ');
         resStringBuilder.append(responseLine.getDescription());
+
         resStringBuilder.append(System.lineSeparator());
         for (String key : messageHeader.getHeader().keySet()
+
         ) {
             resStringBuilder.append(key);
             resStringBuilder.append(": ");
             resStringBuilder.append(messageHeader.getHeader().get(key));
-            resStringBuilder.append(System.lineSeparator());
+            resStringBuilder.append('\n');
         }
-        resStringBuilder.append(System.lineSeparator());
+        resStringBuilder.append('\n');
         return resStringBuilder.toString().getBytes();
     }
 }
