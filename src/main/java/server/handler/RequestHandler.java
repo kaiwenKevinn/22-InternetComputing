@@ -31,7 +31,9 @@ public class RequestHandler extends Thread implements Handler {
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
-    private TimerTask timerTask = null;
+
+    private static TimerTask timerTask = null;
+
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
 
@@ -54,7 +56,7 @@ public class RequestHandler extends Thread implements Handler {
                 try {
                     System.out.println("Timeout, Socket closed");
                     socket.close();
-                    System.out.println("Connection closed due to timeout...");
+    //                System.out.println("Connection closed due to timeout...");
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -66,7 +68,7 @@ public class RequestHandler extends Thread implements Handler {
                 httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
                 System.out.println("readRequest() failed, try again");
-                continue;
+                return;
             }
 
             // handle persistent connection
@@ -100,18 +102,19 @@ public class RequestHandler extends Thread implements Handler {
         String line = null;
         StringBuilder sb = new StringBuilder();
         while((line = inFromClient.readLine()) != null){
-            sb.append(line).append(System.lineSeparator());
+            sb.append(line).append('\n');
             if(line.isEmpty()){
                 break;
             }
         }
         if(sb.toString().equals(""))return null;
         String request = sb.toString();
-        String statusLine = request.split(System.lineSeparator())[0];
-        String[] headers = request.split(System.lineSeparator());
-        String method = statusLine.split("\\s+")[0];
-        String uri = statusLine.split("\\s+")[1];
-        String version= statusLine.split("\\s+")[2];
+        String[] headers = request.split("\n");
+        String startLine = headers[0];
+        String[] startLineSplit = startLine.split("\\s+");
+        String method = startLineSplit[0];
+        String uri = startLineSplit[1];
+        String version= startLineSplit[2];
 
         RequestLine requestLine=new RequestLine(method,uri); //default get
         Header header=new Header();
@@ -129,7 +132,9 @@ public class RequestHandler extends Thread implements Handler {
         return httpRequest;
     }
 
+
     private HttpResponse handle(HttpRequest httpRequest) {
+
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
         String method = httpRequest.getRequestLine().method;
@@ -181,27 +186,20 @@ public class RequestHandler extends Thread implements Handler {
 
     private void sendResponse(HttpResponse httpResponse) {
         System.out.println("---->>>>send response<<<<----");
-        OutputStream os = null;
-        try {
-            os = socket.getOutputStream();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
 
-        PrintStream ps = new PrintStream(os);
         try {
-            ps.write(httpResponse.toBytes());
+            outToClient.write(httpResponse.toBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
         try {
-            os.flush();
-            os.close();
+            outToClient.flush();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
         System.out.println("---->>>>response sended<<<<----");
+
     }
 
 }
