@@ -54,4 +54,13 @@ public class getTest {
             client.Get(uri, true);
         }
     }
+
+    @Test
+    public void pngGet() throws IOException {
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+        String uri = "/2.png";
+        client.Get(uri, false);
+    }
 }

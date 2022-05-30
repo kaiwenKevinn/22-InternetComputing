@@ -81,6 +81,11 @@ public class HttpResponse {
         if (method.equals("POST")) return;//todo POST请求
 
         else {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buffer = new byte[2048];
             int lenc = 0;
@@ -88,8 +93,11 @@ public class HttpResponse {
                 baos.write(buffer, 0, lenc);
                 if(lenc < 2048)break;
             }
+//            BufferedInputStream
             allInBytes = baos.toByteArray();
             buffer = baos.toByteArray();
+
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
 
             //读取响应行;

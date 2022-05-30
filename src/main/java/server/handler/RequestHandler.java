@@ -161,6 +161,7 @@ public class RequestHandler extends Thread implements Handler {
             String trueUri = location.substring(location.lastIndexOf("/"));
             try {
                 bodyData = FileUtil.readFromFile(location);
+
             } catch (FileNotFoundException ex) {
                 System.out.println(location + "文件未找到");
                 statusCode = 404;
@@ -175,6 +176,7 @@ public class RequestHandler extends Thread implements Handler {
             }
 
             httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+            httpResponse.getMessageHeader().put("Content-Length", String.valueOf(bodyData.length));
         } else if ("POST".equals(method)) {
             // TODO
         } else {
@@ -185,6 +187,15 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private void sendResponse(HttpResponse httpResponse) {
+//        byte []data=new byte[0];
+//        String location=httpResponse.getMessageHeader().get("Location");
+//        try {
+//            data=FileUtil.readFromFile(location);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        int length = httpResponse.getMessageBody().getBody().length;
+//        httpResponse.getMessageHeader().put("Content-Length", String.valueOf(data.length));
         System.out.println("---->>>>send response<<<<----");
 
         try {
