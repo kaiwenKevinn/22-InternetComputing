@@ -146,14 +146,14 @@ public class RequestHandler extends Thread implements Handler {
             byte[] bodyData = new byte[0];
             String trueUri = location.substring(location.lastIndexOf("/"));
             try {
-                bodyData = FileUtil.readFromFile(trueUri);
+                bodyData = FileUtil.readFromFile(location);
             } catch (FileNotFoundException ex) {
                 System.out.println(location + "文件未找到");
                 statusCode = 404;
                 location = BIND_DIR + NOT_FOUND_RES;
                 try {
                     trueUri = location.substring(location.lastIndexOf("/"));
-                    bodyData = FileUtil.readFromFile(trueUri);
+                    bodyData = FileUtil.readFromFile(location);
                 } catch (FileNotFoundException ex_) {
                     // impossible
                     assert (false);
@@ -174,7 +174,7 @@ public class RequestHandler extends Thread implements Handler {
         System.out.println("---->>>>send response<<<<----");
         OutputStream os = null;
         try {
-            socket.getOutputStream();
+            os = socket.getOutputStream();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

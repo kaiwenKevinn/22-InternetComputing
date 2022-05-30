@@ -33,7 +33,7 @@ public class getTest {
     @Test
     public void myServerNonPersistentGet() throws IOException {
         host = "127.0.0.1";
-        port = 8080;
+        port = 8888;
         client = new NormalClient(port, host);
         String uri = "/index.html";
         client.Get(uri, false);
