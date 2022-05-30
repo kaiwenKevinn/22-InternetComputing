@@ -94,7 +94,7 @@ public class HttpResponse {
 
             //读取响应行;
             String statusLine = reader.readLine();
-            System.out.println("debug : " + statusLine);
+            //System.out.println("debug : " + statusLine);
             String[] elements = statusLine.split("\\s+");
             String version = elements[0];
             int statusCode = Integer.parseInt(elements[1]);
