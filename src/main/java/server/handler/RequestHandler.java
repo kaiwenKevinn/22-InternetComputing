@@ -31,7 +31,7 @@ public class RequestHandler extends Thread implements Handler {
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
-    private TimerTask task = null;
+    private static TimerTask task = null;
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
 
@@ -52,7 +52,7 @@ public class RequestHandler extends Thread implements Handler {
             if(isTimeout){
                 try {
                     socket.close();
-                    System.out.println("Connection closed due to timeout...");
+    //                System.out.println("Connection closed due to timeout...");
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -63,8 +63,8 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
-                continue;
-                //System.out.println("Cannot read Request");
+                System.out.println("No more request....");
+                return;
             }
 
             //handle persistent connection
@@ -99,18 +99,19 @@ public class RequestHandler extends Thread implements Handler {
         String line = null;
         StringBuilder sb = new StringBuilder();
         while((line = inFromClient.readLine()) != null){
-            sb.append(line).append(System.lineSeparator());
+            sb.append(line).append('\n');
             if(line.isEmpty()){
                 break;
             }
         }
         if(sb.toString().equals(""))return null;
         String request = sb.toString();
-        String statusLine = request.split(System.lineSeparator())[0];
-        String[] headers = request.split(System.lineSeparator());
-        String method = statusLine.split("\\s+")[0];
-        String uri = statusLine.split("\\s+")[1];
-        String version= statusLine.split("\\s+")[2];
+        String[] headers = request.split("\n");
+        String startLine = headers[0];
+        String[] startLineSplit = startLine.split("\\s+");
+        String method = startLineSplit[0];
+        String uri = startLineSplit[1];
+        String version= startLineSplit[2];
 
         RequestLine requestLine=new RequestLine(method,uri); //default get
         Header header=new Header();
@@ -140,7 +141,6 @@ public class RequestHandler extends Thread implements Handler {
         Body body=new Body();
         String uri=httpRequest.requestLine.requestURI;
 //        byte[] data = new byte[0];
-        InputStream in = null;
         int statusCode=0;
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
 
@@ -185,17 +185,9 @@ public class RequestHandler extends Thread implements Handler {
         int dataLen=data.length;
         String Content_Type=MIMEList.getMIMEType(location);
 
-        OutputStream os = null;
-        try {
-            os = socket.getOutputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         // 发送响应头
         String phrase = statusCodeList.getPhrase(statusCode);
         ResponseLine responseLine = new ResponseLine(statusCode, phrase);
-        PrintStream print = new PrintStream(os);
         ResponseHeader sendMessageHeader=new ResponseHeader(statusCode,phrase);
 
         sendMessageHeader.put("Server", "2022-HttpServer");
@@ -210,22 +202,18 @@ public class RequestHandler extends Thread implements Handler {
         HttpResponse response=new HttpResponse(responseLine,sendMessageHeader,new Body(),new byte[2048]);
 
         try {
-            print.write(response.toBytesFromServer());
+            outToClient.write(response.toBytesFromServer());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         // 发送响应数据
-        for(int i = 0; i < dataLen; i++){
-            print.write(data[i]);
-        }
         try {
-            os.flush();
-            os.close();
+            outToClient.write(data);
+            outToClient.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 

@@ -94,15 +94,15 @@ public class HttpResponse {
         resStringBuilder.append(responseLine.getStatusCode());
         resStringBuilder.append(' ');
         resStringBuilder.append(responseLine.getDescription());
-        resStringBuilder.append(System.lineSeparator());
+        resStringBuilder.append('\n');
         for (String key: messageHeader.getHeader().keySet()
         ) {
             resStringBuilder.append(key);
             resStringBuilder.append(": ");
             resStringBuilder.append(messageHeader.getHeader().get(key));
-            resStringBuilder.append(System.lineSeparator());
+            resStringBuilder.append('\n');
         }
-        resStringBuilder.append(System.lineSeparator());
+        resStringBuilder.append('\n');
         return resStringBuilder.toString().getBytes();
     }
 }
