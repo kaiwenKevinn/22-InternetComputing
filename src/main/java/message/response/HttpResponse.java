@@ -92,8 +92,9 @@ public class HttpResponse {
             buffer = baos.toByteArray();
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
 
-            //读取响应行
+            //读取响应行;
             String statusLine = reader.readLine();
+            //System.out.println("debug : " + statusLine);
             String[] elements = statusLine.split("\\s+");
             String version = elements[0];
             int statusCode = Integer.parseInt(elements[1]);
@@ -157,8 +158,10 @@ public class HttpResponse {
         resStringBuilder.append(responseLine.getStatusCode());
         resStringBuilder.append(' ');
         resStringBuilder.append(responseLine.getDescription());
+
         resStringBuilder.append(System.lineSeparator());
         for (String key : messageHeader.getHeader().keySet()
+
         ) {
             resStringBuilder.append(key);
             resStringBuilder.append(": ");

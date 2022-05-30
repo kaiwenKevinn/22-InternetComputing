@@ -31,7 +31,9 @@ public class RequestHandler extends Thread implements Handler {
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();
     private boolean isTimeout = false;
-    private TimerTask timerTask = null;
+
+    private static TimerTask timerTask = null;
+
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
 
@@ -66,7 +68,7 @@ public class RequestHandler extends Thread implements Handler {
                 httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
             } catch (IOException e) {
                 System.out.println("readRequest() failed, try again");
-                continue;
+                return;
             }
 
             // handle persistent connection
@@ -130,7 +132,9 @@ public class RequestHandler extends Thread implements Handler {
         return httpRequest;
     }
 
+
     private HttpResponse handle(HttpRequest httpRequest) {
+
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
         String method = httpRequest.getRequestLine().method;
@@ -182,23 +186,15 @@ public class RequestHandler extends Thread implements Handler {
 
     private void sendResponse(HttpResponse httpResponse) {
         System.out.println("---->>>>send response<<<<----");
-        OutputStream os = null;
-        try {
-            os = socket.getOutputStream();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
 
-        PrintStream ps = new PrintStream(os);
         try {
-            ps.write(httpResponse.toBytes());
+            outToClient.write(httpResponse.toBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
         try {
-            os.flush();
-            os.close();
+            outToClient.flush();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
