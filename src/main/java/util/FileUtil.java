@@ -13,7 +13,7 @@ import static util.InputStreamHelper.getResAsStream;
 public class FileUtil {
 
     public static void save(byte[] data, String path) throws IOException {
-        FileOutputStream fis = new FileOutputStream(path);
+        FileOutputStream fis = new FileOutputStream(path, false);
         BufferedOutputStream bos=null;
         bos=new BufferedOutputStream(fis);
         bos.write(data);
