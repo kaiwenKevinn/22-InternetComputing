@@ -47,7 +47,7 @@ public class getTest {
         client = new NormalClient(port, host);
         String uri = "/index.html";
         client.Get(uri, true);
-    }  //todo 
+    }  //todo
 
     @Test
     public void LoopPersistentGet() throws IOException {
