@@ -1,6 +1,8 @@
 import client.Client;
 import client.NormalClient;
 import org.junit.Test;
+import server.NormalServer;
+import server.Server;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -10,6 +12,7 @@ public class getTest {
     int port = 80;
     Client client;
 
+
     @Test
     public void simpleTestForGet() throws IOException {
         host = "www.example.com";
@@ -17,7 +20,6 @@ public class getTest {
         String uri = "/";
         client.Get(uri, false);
     }
-
 
     @Test
     public void baiduGetTest() throws IOException {
@@ -40,14 +42,7 @@ public class getTest {
         client.Get(uri, false);
     }  //todo  不用长连接会导致body打印不完整
 
-    @Test
-    public void myServerPersistentGet() throws IOException {
-        host = "127.0.0.1";
-        port = 8888;
-        client = new NormalClient(port, host);
-        String uri = "/index.html";
-        client.Get(uri, true);
-    }  //todo 
+
 
     @Test
     public void LoopPersistentGet() throws IOException {
