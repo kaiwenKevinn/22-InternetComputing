@@ -1,6 +1,8 @@
 package client;
 
+import client.cache.ClientModifiedCache;
 import client.cache.ClientRedirectCache;
+import client.cache.LocalStorage;
 import message.Body;
 import message.header.Header;
 import message.header.ResponseHeader;
@@ -11,8 +13,10 @@ import message.response.ResponseLine;
 import util.FileUtil;
 import util.MIMETypes;
 import util.OutputStreamHelper;
+import util.TimeUtil;
 
 import java.io.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -26,6 +30,7 @@ public class NormalClient extends Client {
 
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
     private static ConnectionPool pool = new ConnectionPool();
+    private static ClientModifiedCache localCache = new ClientModifiedCache();
     private NormalClient() {
 
     }
@@ -138,6 +143,26 @@ public class NormalClient extends Client {
                 System.out.println("你将被302重定向至" + trueURI);
                 Get(trueURI, persistent); // 跳转
                 break;
+            //TODO: untested yet
+            case 304://not modified
+                Body localResource = localCache.getLocalResource(host, uri);
+                response.setMessageBody(localResource);
+                System.out.println("Not modified, get resource from local storage...");
+                break;
+        }
+        //update local cache if modified
+        handleModified(response, uri);
+    }
+
+    //TODO: untested yet
+    private void handleModified(HttpResponse response, String uri) {
+        String lastModifiedTime = response.getMessageHeader().get("Last-Modified");
+        if(lastModifiedTime != null && response.getResponseLine().statusCode != 304){
+            try {
+                localCache.putModified(host, uri, lastModifiedTime, response.getMessageBody());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

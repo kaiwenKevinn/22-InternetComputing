@@ -40,7 +40,7 @@ public class getTest {
         client = new NormalClient(port, host);
         String uri = "/index.html";
         client.Get(uri, false);
-    }  //todo  不用长连接会导致body打印不完整
+    }
 
 
 
