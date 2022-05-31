@@ -8,7 +8,7 @@ import java.net.Socket;
 /**
  * @author sunlifan
  * @date 2022/5/29
- * wrap socket in a connecion
+ * wrap socket in a connection
  */
 public class Connection {
     private Socket clientSocket;
