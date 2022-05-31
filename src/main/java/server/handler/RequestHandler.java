@@ -130,16 +130,20 @@ public class RequestHandler extends Thread implements Handler {
             header.put(temp[0], temp[1].trim());
         }
 
-        sb = new StringBuilder();
-        while ((line = inFromClient.readLine()) != null) {
-            sb.append(line).append(System.lineSeparator());
+        byte[] bodyData = new byte[0];
+        if ("POST".equals(method)) {
+            // only POST has body
+            sb = new StringBuilder();
+            while ((line = inFromClient.readLine()) != null) {
+                sb.append(line).append(System.lineSeparator());
+            }
+            String bodyStr = sb.toString();
+            bodyData = bodyStr.getBytes();
         }
-        String bodyStr = sb.toString();
-        byte[] bodyData = bodyStr.getBytes();
         Body body = new Body(bodyData);
 
         System.out.println("request is :");
-        System.out.println(request + System.lineSeparator() + bodyStr);
+        System.out.println(request);
 
         HttpRequest httpRequest = new HttpRequest(requestLine, header, body);
         return httpRequest;
@@ -157,7 +161,6 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private HttpResponse handle(HttpRequest httpRequest) {
-
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
         int statusCode = 0;
@@ -249,37 +252,14 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private void sendResponse(HttpResponse httpResponse) {
-//        byte []data=new byte[0];
-//        String location=httpResponse.getMessageHeader().get("Location");
-//        try {
-//            data=FileUtil.readFromFile(location);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        int length = httpResponse.getMessageBody().getBody().length;
-//        httpResponse.getMessageHeader().put("Content-Length", String.valueOf(data.length));
         System.out.println("---->>>>send response<<<<----");
-        PrintStream ps = null;
-        OutputStream os = null;
-        try {
-            os = socket.getOutputStream();
-            ps = new PrintStream(os);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-
         try {
             outToClient.write(httpResponse.toBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-//        byte[] data = httpResponse.getMessageBody().getBody();
-//        int len = data.length;
-//        for (int i = 0; i < len; i++) ps.write(data[i]);
-
         try {
             outToClient.flush();
-//            os.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
