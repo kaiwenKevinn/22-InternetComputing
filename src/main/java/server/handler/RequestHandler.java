@@ -248,7 +248,7 @@ public class RequestHandler extends Thread implements Handler {
             assert (bodyData != null);
         }
         httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
-        return null;
+        return httpResponse;
     }
 
     private HttpResponse handle(HttpRequest httpRequest) {
