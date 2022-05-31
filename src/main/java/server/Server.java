@@ -1,5 +1,8 @@
 package server;
 
+import util.FileTable;
+
+import java.io.File;
 import java.net.ServerSocket;
 
 /**
@@ -8,9 +11,9 @@ import java.net.ServerSocket;
  */
 
 abstract public class Server{
-    // TODO
     protected boolean isNormal = true; // is working normally
     protected String hostname;
     protected int port;
+    public static FileTable modifiedFileTable;
     abstract public void start() throws Exception;
 }

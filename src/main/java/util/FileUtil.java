@@ -14,8 +14,8 @@ public class FileUtil {
 
     public static void save(byte[] data, String path) throws IOException {
         FileOutputStream fis = new FileOutputStream(path, false);
-        BufferedOutputStream bos=null;
-        bos=new BufferedOutputStream(fis);
+        BufferedOutputStream bos = null;
+        bos = new BufferedOutputStream(fis);
         bos.write(data);
         bos.flush();
         bos.close();
@@ -24,13 +24,12 @@ public class FileUtil {
     /**
      * @param FileLocation
      * @return
-     * @throws FileNotFoundException
-     * 将FileLocation以字节形式读出
+     * @throws FileNotFoundException 将FileLocation以字节形式读出
      */
-    public static final  byte[] readFromFile(String FileLocation) throws FileNotFoundException {
-            InputStream in=null;
-            in=new FileInputStream(FileLocation);
-            byte[] data = getResAsStream(in);
-            return data;
+    public static final byte[] readFromFile(String FileLocation) throws FileNotFoundException {
+        InputStream in = null;
+        in = new FileInputStream(FileLocation);
+        byte[] data = getResAsStream(in);
+        return data;
     }
-    }
+}

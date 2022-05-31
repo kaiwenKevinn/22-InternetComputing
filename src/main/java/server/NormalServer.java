@@ -1,6 +1,7 @@
 package server;
 
 import server.handler.RequestHandler;
+import util.FileTable;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;

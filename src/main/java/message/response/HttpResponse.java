@@ -36,7 +36,6 @@ public class HttpResponse {
      * @param persistent is connection persistent
      */
     public HttpResponse(int statusCode, String location, boolean persistent, Body messageBody) {
-        // TODO
         MIMETypes MIMEList = MIMETypes.getMIMELists();
         StatusCodeAndPhrase statusCodeAndPhrase = StatusCodeAndPhrase.getStatusCodeList();
         String phrase = statusCodeAndPhrase.getPhrase(statusCode);
@@ -65,7 +64,6 @@ public class HttpResponse {
         this.responseLine = responseLine;
         this.messageHeader = messageHeader;
         this.messageBody = body;
-
     }
 
     /**
@@ -136,61 +134,37 @@ public class HttpResponse {
         FileUtil.save(messageBody.getBody(), path);
     }
 
+    /**
+     * construct byte[] of a whole HttpResponse, for being sended in socket
+     * @return byte[]
+     */
     public byte[] toBytes() {
-        // header
-        StringBuilder resStringBuilder = new StringBuilder();
-        resStringBuilder.append(responseLine.getVersion());
-        resStringBuilder.append(' ');
-        resStringBuilder.append(responseLine.getStatusCode());
-        resStringBuilder.append(' ');
-        resStringBuilder.append(responseLine.getDescription());
-        resStringBuilder.append(System.lineSeparator());
+        // construct header
+        StringBuilder headerBuilder = new StringBuilder();
+        headerBuilder.append(responseLine.getVersion()).append(' ');
+        headerBuilder.append(responseLine.getStatusCode()).append(' ');
+        headerBuilder.append(responseLine.getDescription()).append(' ');
+        headerBuilder.append(System.lineSeparator());
         for (String key : messageHeader.getHeader().keySet()) {
-            resStringBuilder.append(key);
-            resStringBuilder.append(": ");
-            resStringBuilder.append(messageHeader.getHeader().get(key));
-            resStringBuilder.append(System.lineSeparator());
+            headerBuilder.append(key).append(": ").append(messageHeader.getHeader().get(key));
+            headerBuilder.append(System.lineSeparator());
         }
-        resStringBuilder.append(System.lineSeparator());
+        headerBuilder.append(System.lineSeparator());
+        byte[] header = headerBuilder.toString().getBytes();
 
-//        print.write(request);
+        // construct body
+        byte[] body = messageBody.getBody();
 
-//        for (int i = 0; i < data.length; i++) {
-//            print.write(data[i]);
-//        }
+        // concat header and body
+        ByteArrayOutputStream tmpStream = new ByteArrayOutputStream();
+        try {
+            tmpStream.write(header);
+            tmpStream.write(body);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
-        // body
-//        resStringBuilder.append(new String(messageBody.getBody()));
-        String retStr = resStringBuilder.toString();
-        byte[] tmp = retStr.getBytes();
-        byte[] ret = new byte[tmp.length + messageBody.getBody().length];
-        for (int i = 0; i < tmp.length; i++) ret[i] = tmp[i];
-        for (int i = tmp.length; i < ret.length; i++) ret[i] = messageBody.getBody()[i - tmp.length];
-
-        return ret;
-//        return resStringBuilder.toString().getBytes();
+        return tmpStream.toByteArray();
     }
 
-    public byte[] toBytesFromServer() {
-        // never called
-        assert (false);
-        StringBuilder resStringBuilder = new StringBuilder();
-        resStringBuilder.append(responseLine.getVersion());
-        resStringBuilder.append(' ');
-        resStringBuilder.append(responseLine.getStatusCode());
-        resStringBuilder.append(' ');
-        resStringBuilder.append(responseLine.getDescription());
-
-        resStringBuilder.append(System.lineSeparator());
-        for (String key : messageHeader.getHeader().keySet()
-
-        ) {
-            resStringBuilder.append(key);
-            resStringBuilder.append(": ");
-            resStringBuilder.append(messageHeader.getHeader().get(key));
-            resStringBuilder.append('\n');
-        }
-        resStringBuilder.append('\n');
-        return resStringBuilder.toString().getBytes();
-    }
 }
