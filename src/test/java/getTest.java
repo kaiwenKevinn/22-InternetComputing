@@ -43,7 +43,6 @@ public class getTest {
     }  //todo  不用长连接会导致body打印不完整
 
 
-
     @Test
     public void LoopPersistentGet() throws IOException {
         host = "127.0.0.1";
