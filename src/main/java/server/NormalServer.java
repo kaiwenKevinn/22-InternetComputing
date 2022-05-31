@@ -16,6 +16,8 @@ public class NormalServer extends Server {
     public NormalServer(String hostname, int port) {
         this.hostname = hostname;
         this.port = port;
+        Server.modifiedFileTable = new FileTable();
+        Server.modifiedFileTable.initInAFolder(ServerMain.BIND_DIR);
     }
 
     public void start() throws Exception {

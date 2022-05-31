@@ -72,4 +72,14 @@ public class getTest {
         String uri = "/3.zip";
         client.Get(uri, false);
     }
+
+    @Test
+    public void myServer304Get() throws IOException {
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+        String uri = "/index.html";
+        client.Get(uri, true);
+        client.Get(uri, true);
+    }
 }

@@ -6,7 +6,9 @@ import message.request.HttpRequest;
 import message.request.RequestLine;
 import message.response.HttpResponse;
 import server.NormalServer;
+import server.Server;
 import server.redirect.RedirectList;
+import util.FileTable;
 import util.FileUtil;
 import util.MIMETypes;
 import util.StatusCodeAndPhrase;
@@ -33,6 +35,8 @@ public class RequestHandler extends Thread implements Handler {
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
 
+    private FileTable getFileTable;
+
     public RequestHandler(Socket socket) {
         this.socket = socket;
         try {
@@ -41,6 +45,7 @@ public class RequestHandler extends Thread implements Handler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        getFileTable = new FileTable();
     }
 
     @Override
@@ -84,21 +89,17 @@ public class RequestHandler extends Thread implements Handler {
 
             // non-persistent connection, break out
             if (httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))) {
+                System.out.println("Non-persistent connection closed....");
                 break;
             }
-            System.out.println("Non-persistent connection closed....");
         }
 
     }
 
-
     private HttpRequest readRequest() throws IOException {
-        // TODO
-        // readLineAndHeader() (-> readBody())
-        return null;
-    }
+        // TODO: refactor this function
 
-    private HttpRequest readRequest() throws IOException {
+        // #1. reader requestLine and header
         // phrase httpRequest
         String line = null;
         StringBuilder sb = new StringBuilder();
@@ -110,22 +111,14 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-// <<<<<<< server-head
-//         String statusLine = request.split(System.lineSeparator())[0];
-//         String[] headers = request.split(System.lineSeparator());
-//         String method = statusLine.split("\\s+")[0];
-//         String uri = statusLine.split("\\s+")[1];
-//         String version = statusLine.split("\\s+")[2];
-// =======
         String[] headers = request.split("\n"); // TODO: bad '\n'
         String startLine = headers[0];
         String[] startLineSplit = startLine.split("\\s+");
         String method = startLineSplit[0];
         String uri = startLineSplit[1];
         String version= startLineSplit[2];
-// >>>>>>> master
 
-        RequestLine requestLine = new RequestLine(method, uri); //default get
+        RequestLine requestLine = new RequestLine(method, uri);
         Header header = new Header();
         for (int i = 1; i < headers.length; i++) {
             String singleItem = headers[i];
@@ -134,11 +127,15 @@ public class RequestHandler extends Thread implements Handler {
         }
 
         byte[] bodyData = new byte[0];
+        // #2. read body
         if ("POST".equals(method)) {
             // only POST has body
+            int cnt = Integer.parseInt(header.getHeader().get("Content-Length")), cur = 0;
             sb = new StringBuilder();
             while ((line = inFromClient.readLine()) != null) {
                 sb.append(line).append(System.lineSeparator());
+                cur += line.length();
+                if (cur >= cnt) break;
             }
             String bodyStr = sb.toString();
             bodyData = bodyStr.getBytes();
@@ -163,91 +160,119 @@ public class RequestHandler extends Thread implements Handler {
         return bodyData;
     }
 
-    private HttpResponse handle(HttpRequest httpRequest) {
+    private HttpResponse getHandler(HttpRequest httpRequest) {
         boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
         HttpResponse httpResponse = null;
-        int statusCode = 0;
-        String location = null;
-        byte[] bodyData = new byte[0];
-        if (isDown) {
-            statusCode = 500;
-            location = BIND_DIR + SERVER_ERROR_RES;
+        int statusCode;
+        String location;
+        byte[] bodyData;
+
+        String uri = httpRequest.requestLine.requestURI;
+        String redirectQuery = redirectList.query(uri);
+        if (!redirectQuery.equals("")) {
+            // 301 / 302
+            statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
+            location = BIND_DIR + redirectQuery.substring(3);
+        } else {
+            statusCode = 200;
+            location = BIND_DIR + uri;
+
+            // 304
+            Long getTime = getFileTable.getModifiedTime(location);
+            Long modifyTime = Server.modifiedFileTable.getModifiedTime(location);
+            assert (modifyTime != -1);
+            if (getTime >= modifyTime) {
+                statusCode = 304;
+                location = BIND_DIR + NOT_MODIFIED_RES;
+            }
+            if (statusCode != 304) getFileTable.modify(location);
+        }
+        bodyData = getBodyDataFromFile(location);
+        if (bodyData == null) {
+            statusCode = 404;
+            location = BIND_DIR + NOT_FOUND_RES;
             bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
+        }
+
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+        return httpResponse;
+    }
+
+    private HttpResponse postHandler(HttpRequest httpRequest) {
+        boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
+        int statusCode;
+        String location;
+        byte[] bodyData;
+        HttpResponse httpResponse;
+
+        String uri = httpRequest.requestLine.requestURI;
+        location = BIND_DIR + uri;
+        String contentType = httpRequest.getHeader().get("Content-Type");
+        String contentLength = httpRequest.getHeader().get("Content-Length");
+        assert (contentType != null && contentLength != null);
+        if (contentType.indexOf(';') != -1) {
+            // Content-Type: multipart/form-data
+            String boundary = contentType.split(";")[1].trim();
+            contentType = contentType.split(";")[0].trim();
+            assert ("multipart/form-data".equals(contentType));
+            assert (boundary.startsWith("boundary="));
+            boundary = boundary.substring("boundary=".length());
+            // TODO
+            String[] bodyLines = new String(httpRequest.messageBody.getBody()).split(System.lineSeparator());
+            assert (boundary.equals(bodyLines[0]));
+            for (int i = 1; i < bodyLines.length; i++) {
+
+            }
+
+            statusCode = 200;
+            location = BIND_DIR + POST_SUCCESS_RES;
+            bodyData = getBodyDataFromFile(location);
+            assert (bodyData != null);
+        } else {
+            // bytes[]
+            int length = Integer.parseInt(contentLength);
+            byte[] fileData = new byte[length];
+            for (int i = 0; i < length; i++) {
+                fileData[i] = httpRequest.messageBody.getBody()[i];
+            }
+            try {
+                FileUtil.save(fileData, location);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.out.println("Fail to save file");
+            }
+            statusCode = 200;
+            location = BIND_DIR + POST_SUCCESS_RES; // !warning: reuse variable 'location', bad practice
+            bodyData = getBodyDataFromFile(location);
+            assert (bodyData != null);
+        }
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
+        return null;
+    }
+
+    private HttpResponse handle(HttpRequest httpRequest) {
+        HttpResponse httpResponse = null;
+        if (isDown) {
+            boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
+            int statusCode = 500;
+            String location = BIND_DIR + SERVER_ERROR_RES;
+            byte[] bodyData = getBodyDataFromFile(location);
+            assert (bodyData != null);
             httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
+            return httpResponse;
         }
         String method = httpRequest.getRequestLine().method;
         if ("GET".equals(method)) {
-            // TODO: 304
-            String uri = httpRequest.requestLine.requestURI;
-            String redirectQuery = redirectList.query(uri);
-            if (!redirectQuery.equals("")) {
-                // 301 / 302
-                statusCode = Integer.parseInt(redirectQuery.substring(0, 3));
-                location = BIND_DIR + redirectQuery.substring(3);
-            } else {
-                statusCode = 200;
-                location = BIND_DIR + uri;
-            }
-            bodyData = getBodyDataFromFile(location);
-            if (bodyData == null) {
-                statusCode = 404;
-                location = BIND_DIR + NOT_FOUND_RES;
-                bodyData = getBodyDataFromFile(location);
-                assert (bodyData != null);
-            }
-
-            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+            httpResponse = getHandler(httpRequest);
         } else if ("POST".equals(method)) {
-            // TODO
-            String uri = httpRequest.requestLine.requestURI;
-            location = BIND_DIR + uri;
-            String contentType = httpRequest.getHeader().get("Content-Type");
-            String contentLength = httpRequest.getHeader().get("Content-Length");
-            assert (contentType != null && contentLength != null);
-            if (contentType.indexOf(';') != -1) {
-                // Content-Type: multipart/form-data
-                String boundary = contentType.split(";")[1].trim();
-                contentType = contentType.split(";")[0].trim();
-                assert ("multipart/form-data".equals(contentType));
-                assert (boundary.startsWith("boundary="));
-                boundary = boundary.substring("boundary=".length());
-                // TODO
-                String[] bodyLines = new String(httpRequest.messageBody.getBody()).split(System.lineSeparator());
-                assert (boundary.equals(bodyLines[0]));
-                for (int i = 1; i < bodyLines.length; i++) {
-
-                }
-
-                statusCode = 200;
-                location = BIND_DIR + POST_SUCCESS_RES;
-                bodyData = getBodyDataFromFile(location);
-                assert (bodyData != null);
-            } else {
-                // bytes[]
-                int length = Integer.parseInt(contentLength);
-                byte[] fileData = new byte[length];
-                for (int i = 0; i < length; i++) {
-                    fileData[i] = httpRequest.messageBody.getBody()[i];
-                }
-                try {
-                    FileUtil.save(fileData, location);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    System.out.println("Fail to save file");
-                }
-                statusCode = 200;
-                location = BIND_DIR + POST_SUCCESS_RES; // !warning: reuse variable 'location', bad practice
-                bodyData = getBodyDataFromFile(location);
-                assert (bodyData != null);
-            }
-            httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
+            httpResponse = postHandler(httpRequest);
         } else {
-            statusCode = 405;
-            location = BIND_DIR + METHOD_NOT_ALLOWED_RES;
-            bodyData = getBodyDataFromFile(location);
+            boolean persistent = "Keep-Alive".equals(httpRequest.getHeader().get("Connection"));
+            int statusCode = 405;
+            String location = BIND_DIR + METHOD_NOT_ALLOWED_RES;
+            byte[] bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
-
             httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
         }
 
