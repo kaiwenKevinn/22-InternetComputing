@@ -16,6 +16,7 @@ public class StatusCodeAndPhrase {
         codeList.put(200, "OK");
         codeList.put(301, "Moved Permanently");
         codeList.put(302, "Found");
+        codeList.put(304, "Not Modified");
         codeList.put(404, "Not Found");
         codeList.put(405, "Method Not Allowed");
         codeList.put(500, "Internal Server Error");
