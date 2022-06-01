@@ -40,4 +40,21 @@ public class postTest {
         writer.flush();
         writer.close();
     }
+
+    @Test
+    public void simpleRegisterTest() throws IOException {
+        host = "127.0.0.1";
+        port = 8888;
+        Socket socket = new Socket(host, port);
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        String request = "POST /registerOrLogin HTTP/1.1\n" +
+                "Host: 127.0.0.1\n" +
+                "Content-Type: application/x-www-form-urlencoded\n" +
+                "Content-Length: 39\n" +
+                "\n" +
+                "type=register&username=111&password=111\n";
+        writer.write(request);
+        writer.flush();
+        writer.close();
+    }
 }
