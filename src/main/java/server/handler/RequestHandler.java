@@ -194,7 +194,7 @@ public class RequestHandler extends Thread implements Handler {
             bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
         }
-        Long modifiedTime = getFileTable.getModifiedTime(location);
+        Long modifiedTime = Server.modifiedFileTable.getModifiedTime(location);
         httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime); // TODO
         return httpResponse;
     }
