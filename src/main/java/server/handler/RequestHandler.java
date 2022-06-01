@@ -242,8 +242,6 @@ public class RequestHandler extends Thread implements Handler {
             }
             String content = new String(requestBodyData, StandardCharsets.UTF_8);
             String[] args = new String[3];
-            for (int i = 0; i < Math.max())
-            content.split("&").length;
             for (String arg : args) {
                 arg = arg.split("=")[1];
             }
