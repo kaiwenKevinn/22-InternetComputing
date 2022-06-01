@@ -1,6 +1,7 @@
 package server;
 
 import server.handler.RequestHandler;
+import server.usrServices.UserServicesList;
 import util.FileTable;
 
 import java.net.InetSocketAddress;
@@ -18,6 +19,7 @@ public class NormalServer extends Server {
         this.port = port;
         Server.modifiedFileTable = new FileTable();
         Server.modifiedFileTable.initInAFolder(ServerMain.BIND_DIR);
+        services = new UserServicesList();
     }
 
     public void start() throws Exception {

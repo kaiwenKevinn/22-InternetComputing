@@ -43,7 +43,6 @@ public class getTest {
     }
 
 
-
     @Test
     public void LoopPersistentGet() throws IOException {
         host = "127.0.0.1";

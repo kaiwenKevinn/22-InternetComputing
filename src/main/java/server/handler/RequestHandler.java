@@ -15,6 +15,7 @@ import util.StatusCodeAndPhrase;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -222,7 +223,7 @@ public class RequestHandler extends Thread implements Handler {
             boundary = boundary.substring("boundary=".length());
             // TODO
             String[] bodyLines = new String(httpRequest.messageBody.getBody()).split(System.lineSeparator());
-            assert (boundary.equals(bodyLines[0]));
+            assert (("--" + boundary).equals(bodyLines[0]));
             for (int i = 1; i < bodyLines.length; i++) {
 
             }
@@ -232,18 +233,21 @@ public class RequestHandler extends Thread implements Handler {
             bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
         } else {
-            // bytes[]
+            // Content-Type: application/x-www-form-urlencoded
+            assert ("application/x-www-form-urlencoded".equals(contentType));
             int length = Integer.parseInt(contentLength);
-            byte[] fileData = new byte[length];
+            byte[] requestBodyData = new byte[length];
             for (int i = 0; i < length; i++) {
-                fileData[i] = httpRequest.messageBody.getBody()[i];
+                requestBodyData[i] = httpRequest.messageBody.getBody()[i];
             }
-            try {
-                FileUtil.save(fileData, location);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                System.out.println("Fail to save file");
+            String content = new String(requestBodyData, StandardCharsets.UTF_8);
+            String[] args = new String[3];
+            for (int i = 0; i < Math.max())
+            content.split("&").length;
+            for (String arg : args) {
+                arg = arg.split("=")[1];
             }
+
             statusCode = 200;
             location = BIND_DIR + POST_SUCCESS_RES; // !warning: reuse variable 'location', bad practice
             bodyData = getBodyDataFromFile(location);
