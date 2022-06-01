@@ -31,7 +31,7 @@ public class FileTable {
                 File file1 = tmpList[i];
                 String filePath = file1.toString();
                 filePath=filePath.replace((char)92,'/');
-                files.put(filePath, new Date().getTime());
+                files.put(filePath, System.currentTimeMillis());
             }
         }
         lock.unlock();
@@ -44,9 +44,9 @@ public class FileTable {
     public void modify(String file) {
         lock.lock();
         if (files.get(file) == null) {
-            files.put(file, new Date().getTime());
+            files.put(file, System.currentTimeMillis());
         } else {
-            files.replace(file, new Date().getTime());
+            files.replace(file, System.currentTimeMillis());
         }
         lock.unlock();
     }

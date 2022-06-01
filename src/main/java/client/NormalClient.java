@@ -159,7 +159,7 @@ public class NormalClient extends Client {
         String lastModifiedTime = response.getMessageHeader().get("Last-Modified");
         if(lastModifiedTime != null && response.getResponseLine().statusCode != 304){
             try {
-                localCache.putModified(host, uri, lastModifiedTime, response.getMessageBody());
+                localCache.putModified(host, uri, Long.parseLong(lastModifiedTime), response.getMessageBody());
             } catch (ParseException e) {
                 e.printStackTrace();
             }

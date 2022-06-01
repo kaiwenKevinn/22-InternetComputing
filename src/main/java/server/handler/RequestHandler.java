@@ -71,7 +71,7 @@ public class RequestHandler extends Thread implements Handler {
             }
 
             // handle persistent connection
-            if (httpRequest.getHeader().get("Keep-Alive") != null) {
+            if (httpRequest != null && httpRequest.getHeader().get("Keep-Alive") != null) {
                 long timeout = Long.parseLong(httpRequest.getHeader().get("Keep-Alive").substring(8));
                 if (timerTask != null) timerTask.cancel();
                 timerTask = new TimerTask() {

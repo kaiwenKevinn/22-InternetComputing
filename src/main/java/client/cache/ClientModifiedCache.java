@@ -15,8 +15,8 @@ import java.util.LinkedHashMap;
 public class ClientModifiedCache {
     private HashMap<String, LocalStorage> localCache = new LinkedHashMap<>();
 
-    public void putModified(String hostname, String uri, String time, Body body) throws ParseException {
-        long timeStamp = TimeUtil.getTimestamp(time);
+    public void putModified(String hostname, String uri, Long time, Body body) throws ParseException {
+        long timeStamp = TimeUtil.getTimestamp(TimeUtil.toTimeString(time));
 
         LocalStorage localStorage = new LocalStorage(timeStamp, body);
 
