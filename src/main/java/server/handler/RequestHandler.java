@@ -70,28 +70,29 @@ public class RequestHandler extends Thread implements Handler {
                 return;
             }
 
+            if (httpRequest != null) {
+                // handle persistent connection
+                if (httpRequest.getHeader().get("Keep-Alive") != null) {
+                    long timeout = Long.parseLong(httpRequest.getHeader().get("Keep-Alive").substring(8));
+                    if (timerTask != null) timerTask.cancel();
+                    timerTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                            isTimeout = true;
+                        }
+                    };
+                    Timer timer = NormalServer.timer;
+                    timer.schedule(timerTask, timeout * 1000L);
+                }
 
-            // handle persistent connection
-            if (httpRequest.getHeader().get("Keep-Alive") != null) {
-                long timeout = Long.parseLong(httpRequest.getHeader().get("Keep-Alive").substring(8));
-                if (timerTask != null) timerTask.cancel();
-                timerTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        isTimeout = true;
-                    }
-                };
-                Timer timer = NormalServer.timer;
-                timer.schedule(timerTask, timeout * 1000L);
-            }
+                HttpResponse httpResponse = handle(httpRequest);
+                if (httpResponse != null) sendResponse(httpResponse);
 
-            HttpResponse httpResponse = handle(httpRequest);
-            if (httpResponse != null) sendResponse(httpResponse);
-
-            // non-persistent connection, break out
-            if (httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))) {
-                System.out.println("Non-persistent connection closed....");
-                break;
+                // non-persistent connection, break out
+                if (httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))) {
+                    System.out.println("Non-persistent connection closed....");
+                    break;
+                }
             }
         }
 
