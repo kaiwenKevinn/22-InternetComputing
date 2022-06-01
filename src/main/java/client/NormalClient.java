@@ -5,6 +5,7 @@ import client.cache.ClientRedirectCache;
 import client.cache.LocalStorage;
 import message.Body;
 import message.header.Header;
+import message.header.RequestHeader;
 import message.header.ResponseHeader;
 import message.request.HttpRequest;
 import message.request.RequestLine;
@@ -16,6 +17,11 @@ import util.OutputStreamHelper;
 import util.TimeUtil;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -31,6 +37,7 @@ public class NormalClient extends Client {
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
     private static ConnectionPool pool = new ConnectionPool();
     private static ClientModifiedCache localCache = new ClientModifiedCache();
+    private static String boundary = "kvOEuWu8KBdBKTF5az4Y";
     private NormalClient() {
 
     }
@@ -54,25 +61,73 @@ public class NormalClient extends Client {
 
         //发送http请求
         OutputStream socketOut = conn.getSendStream();
-        socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
-
+        //===>socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
+        //感觉上面这样有点不好复用
+        socketOut.write(request.toBytes());
         //处理返回请求
         InputStream inputStream = conn.getRecvStream();
         handleGet(inputStream, uri);
         if(!persistent)NormalClient.pool.removeConnection(host);
     }
 
-    /**
-     * @param uri
-     * @return 封装request，方法为GET
-     */
-    private HttpRequest encapsulateRequest(String uri, boolean persistent) {
-        RequestLine requestLine = new RequestLine("GET", uri);
-        Header requestHeader = new Header();
+    public void Post(String uri, boolean persistent, Body body) throws IOException {
+        Connection conn = null;
+
+        try {
+            conn = pool.getConnection(host, port, persistent);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //encapsulate post request
+        HttpRequest request = encapsulatePostRequest(uri, persistent, body);
+
+        OutputStream socketOut = conn.getSendStream();
+        //send to server
+        socketOut.write(request.toBytes());
+
+        InputStream inputStream = conn.getRecvStream();
+
+        handlePost(inputStream, uri);
+
+        if(!persistent)NormalClient.pool.removeConnection(host);
+    }
+
+    private void handlePost(InputStream inputStream, String uri){
+
+    }
+
+    public void uploadFile(String uri, String filepath, boolean persistent) {
+        Path path = Paths.get(filepath);
+        try {
+            byte[] bodyBytes = Files.readAllBytes(path);
+            StringBuilder sb = new StringBuilder();
+            sb.append("--").append(boundary).append(System.lineSeparator());
+            sb.append("Content-Disposition: form-data; name=\"filename\"").append(System.lineSeparator());
+            sb.append(System.lineSeparator());
+            sb.append(filepath).append(System.lineSeparator());
+            sb.append("--").append(boundary).append(System.lineSeparator());
+            sb.append("Content-Disposition: application/jpeg; name=\"data\"").append(System.lineSeparator());
+            sb.append(System.lineSeparator());
+            StringBuilder end = new StringBuilder();
+            end.append(System.lineSeparator()).append("--").append(boundary).append("--").append(System.lineSeparator());
+            byte[] startBytes = sb.toString().getBytes();
+            byte[] endBytes = end.toString().getBytes();
+            byte[] bytes = new byte[startBytes.length + bodyBytes.length + endBytes.length];
+            System.arraycopy(startBytes, 0, bytes, 0, startBytes.length);
+            System.arraycopy(bodyBytes, 0, bytes, startBytes.length, bodyBytes.length);
+            System.arraycopy(endBytes, 0, bytes, startBytes.length + bodyBytes.length, endBytes.length);
+            Body body = new Body(bytes);
+            Post(uri, persistent, body);
+        } catch (IOException e) {
+            System.out.println("IOExceptions occurs when reading file: " + filepath);
+            return;
+        }
+    }
+
+    private void setCommonHeader(Header requestHeader, boolean persistent){
         requestHeader.put("Accept", "*/*");
         requestHeader.put("Accept-Language", "zh-cn");
         requestHeader.put("User-Agent", "2022-HTTPClient");
-
         if (port != 80 && port != 443) {
             requestHeader.put("Host", host + ':' + port);
         } else {
@@ -82,6 +137,41 @@ public class NormalClient extends Client {
             requestHeader.put("Connection", "Keep-Alive");
             requestHeader.put("Keep-Alive", "timeout=120");
         } else requestHeader.put("Connection", "close");
+    }
+
+    private void setHeaderByUri(String uri, Header requestHeader){
+        switch(uri){
+            case "/registerOrLogin":
+                //do something
+                requestHeader.put("Content-Type", "application/x-www-form-urlencoded");
+                break;
+            case "upLoadFile":
+                //this is a randomly generated string
+                requestHeader.put("ContentType", "multipart/form-data; boundary=" + boundary);
+                break;
+        }
+    }
+
+    private HttpRequest encapsulatePostRequest(String uri, boolean persistent, Body body){
+        RequestLine requestLine = new RequestLine("POST", uri);
+        Header requestHeader = new Header();
+        setCommonHeader(requestHeader, persistent);
+
+        setHeaderByUri(uri, requestHeader);
+        int len = body.getBody().length - System.lineSeparator().length();
+        requestHeader.put("Content-Length", String.valueOf(len));
+        HttpRequest request = new HttpRequest(requestLine, requestHeader, body);
+        return request;
+    }
+
+    /**
+     * @param uri
+     * @return 封装request，方法为GET
+     */
+    private HttpRequest encapsulateRequest(String uri, boolean persistent) {
+        RequestLine requestLine = new RequestLine("GET", uri);
+        Header requestHeader = new Header();
+        setCommonHeader(requestHeader, persistent);
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);
 
@@ -102,7 +192,8 @@ public class NormalClient extends Client {
         ResponseLine responseLine = response.getResponseLine();
         Body body = response.getMessageBody();
 
-        String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
+        //String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
+        String toBePrint = response.getResponseLine().toString() + response.getMessageHeader().toString();
         System.out.println(toBePrint);
         String receiveMIMEType = responseHeader.getHeader().get("Content-Type");
         boolean persistent = "Keep-Alive".equals(responseHeader.getHeader().get("Connection"));

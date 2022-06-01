@@ -48,4 +48,13 @@ public class ResponseLine {
     public ResponseLine() {
 
     }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(version).append(' ').append(statusCode).append(' ').append(description);
+        sb.append(System.lineSeparator());
+
+        return sb.toString();
+    }
 }

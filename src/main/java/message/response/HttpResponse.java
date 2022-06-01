@@ -167,32 +167,16 @@ public class HttpResponse {
      * @return byte[]
      */
     public byte[] toBytes() {
-        // construct header
-        StringBuilder headerBuilder = new StringBuilder();
-        headerBuilder.append(responseLine.getVersion()).append(' ');
-        headerBuilder.append(responseLine.getStatusCode()).append(' ');
-        headerBuilder.append(responseLine.getDescription()).append(' ');
-        headerBuilder.append(System.lineSeparator());
-        for (String key : messageHeader.getHeader().keySet()) {
-            headerBuilder.append(key).append(": ").append(messageHeader.getHeader().get(key));
-            headerBuilder.append(System.lineSeparator());
-        }
-        headerBuilder.append(System.lineSeparator());
-        byte[] header = headerBuilder.toString().getBytes();
+        byte[] lineBytes = responseLine.toString().getBytes();
+        byte[] headerBytes = messageHeader.toString().getBytes();
+        byte[] bodyBytes = messageBody == null ? new byte[0] : messageBody.getBody();
+        byte[] respBytes = new byte[lineBytes.length + headerBytes.length + bodyBytes.length];
 
-        // construct body
-        byte[] body = messageBody.getBody();
+        System.arraycopy(lineBytes, 0, respBytes, 0, lineBytes.length);
+        System.arraycopy(headerBytes, 0, respBytes, lineBytes.length, headerBytes.length);
+        System.arraycopy(bodyBytes, 0, respBytes, lineBytes.length + headerBytes.length, bodyBytes.length);
 
-        // concat header and body
-        ByteArrayOutputStream tmpStream = new ByteArrayOutputStream();
-        try {
-            tmpStream.write(header);
-            tmpStream.write(body);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-
-        return tmpStream.toByteArray();
+        return respBytes;
     }
 
 }

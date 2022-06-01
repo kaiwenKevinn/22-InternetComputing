@@ -81,4 +81,13 @@ public class Header {
         return header.keySet();
     }
 
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        for(String key : header.keySet()){
+            sb.append(key).append(":").append(header.get(key)).append(System.lineSeparator());
+        }
+        sb.append(System.lineSeparator());
+        return sb.toString();
+    }
 }
