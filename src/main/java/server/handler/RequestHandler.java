@@ -111,7 +111,7 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-        String[] headers = request.split("\n"); // TODO: bad '\n'
+        String[] headers = request.split(System.lineSeparator()); // TODO: bad '\n'
         String startLine = headers[0];
         String[] startLineSplit = startLine.split("\\s+");
         String method = startLineSplit[0];
@@ -181,7 +181,7 @@ public class RequestHandler extends Thread implements Handler {
             Long getTime = getFileTable.getModifiedTime(location);
             Long modifyTime = Server.modifiedFileTable.getModifiedTime(location);
             assert (modifyTime != -1);
-            if (getTime >= modifyTime) {
+            if (getTime >= modifyTime) {//todo modifyTime一直为-1
                 statusCode = 304;
                 location = BIND_DIR + NOT_MODIFIED_RES;
             }
@@ -194,8 +194,8 @@ public class RequestHandler extends Thread implements Handler {
             bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
         }
-
-        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData)); // TODO
+        Long modifiedTime = getFileTable.getModifiedTime(location);
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime); // TODO
         return httpResponse;
     }
 
@@ -247,7 +247,8 @@ public class RequestHandler extends Thread implements Handler {
             bodyData = getBodyDataFromFile(location);
             assert (bodyData != null);
         }
-        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
+        Long modifiedTime = getFileTable.getModifiedTime(location);
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime);
         return httpResponse;
     }
 

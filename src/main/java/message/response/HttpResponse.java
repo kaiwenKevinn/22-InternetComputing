@@ -35,6 +35,34 @@ public class HttpResponse {
      * @param location   resources location
      * @param persistent is connection persistent
      */
+    public HttpResponse(int statusCode, String location, boolean persistent, Body messageBody,long modifiedTime) {
+        MIMETypes MIMEList = MIMETypes.getMIMELists();
+        StatusCodeAndPhrase statusCodeAndPhrase = StatusCodeAndPhrase.getStatusCodeList();
+        String phrase = statusCodeAndPhrase.getPhrase(statusCode);
+        ResponseLine responseLine = new ResponseLine(statusCode, phrase);
+
+        ResponseHeader messageHeader = new ResponseHeader(statusCode, phrase);
+        messageHeader.put("Server", "2022-HttpServer");
+        if (statusCode == 301 || statusCode == 302) {
+            String trueUri = location.substring(location.lastIndexOf("/"));
+            messageHeader.put("Location", trueUri);
+        }
+        int dataLen = messageBody.getBody().length;
+        messageHeader.put("Content-Length", String.valueOf(dataLen));
+        String Content_Type = MIMEList.getMIMEType(location);
+        messageHeader.put("Content-Type", Content_Type);
+//        String lastModified=
+//        messageHeader.put("Last-Modified",);
+        //todo get modifiedTime
+        messageHeader.put("Last-Modified", String.valueOf(modifiedTime));
+        if (persistent) {
+            messageHeader.put("Connection", "Keep-Alive");
+        }
+
+        this.responseLine = responseLine;
+        this.messageHeader = messageHeader;
+        this.messageBody = messageBody;
+    }
     public HttpResponse(int statusCode, String location, boolean persistent, Body messageBody) {
         MIMETypes MIMEList = MIMETypes.getMIMELists();
         StatusCodeAndPhrase statusCodeAndPhrase = StatusCodeAndPhrase.getStatusCodeList();
@@ -51,6 +79,7 @@ public class HttpResponse {
         messageHeader.put("Content-Length", String.valueOf(dataLen));
         String Content_Type = MIMEList.getMIMEType(location);
         messageHeader.put("Content-Type", Content_Type);
+
         if (persistent) {
             messageHeader.put("Connection", "Keep-Alive");
         }
@@ -59,7 +88,6 @@ public class HttpResponse {
         this.messageHeader = messageHeader;
         this.messageBody = messageBody;
     }
-
     public HttpResponse(ResponseLine responseLine, ResponseHeader messageHeader, Body body, byte[] allInBytes) {
         this.responseLine = responseLine;
         this.messageHeader = messageHeader;

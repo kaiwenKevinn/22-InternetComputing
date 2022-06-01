@@ -28,7 +28,10 @@ public class FileTable {
         File[] tmpList = file.listFiles();
         for (int i = 0; i < tmpList.length; i++) {
             if (tmpList[i].isFile()) {
-                files.put(tmpList[i].toString(), new Date().getTime());
+                File file1 = tmpList[i];
+                String filePath = file1.toString();
+                filePath=filePath.replace((char)92,'/');
+                files.put(filePath, new Date().getTime());
             }
         }
         lock.unlock();
