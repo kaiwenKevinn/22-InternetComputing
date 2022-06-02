@@ -117,8 +117,9 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-        String[] headers = request.split(System.lineSeparator()); // TODO: bad '\n'
+        String[] headers = request.split(System.lineSeparator());// TODO: bad '\n'
         String startLine = headers[0];
+
         String[] startLineSplit = startLine.split("\\s+");
         String method = startLineSplit[0];
         String uri = startLineSplit[1];
@@ -140,7 +141,8 @@ public class RequestHandler extends Thread implements Handler {
             sb = new StringBuilder();
             while ((line = inFromClient.readLine()) != null) {
                 sb.append(line).append(System.lineSeparator());
-                cur += line.length() + System.lineSeparator().length();
+                //TODO : a char accounts for 2 bytes in Java?
+                cur += line.getBytes().length + System.lineSeparator().getBytes().length;
                 if (cur >= cnt) break;
             }
             String bodyStr = sb.toString();
@@ -219,6 +221,7 @@ public class RequestHandler extends Thread implements Handler {
         assert (contentType != null && contentLength != null);
 
         String[] args = new String[3];
+        System.out.println(contentType);
         if (contentType.indexOf(';') != -1) {
             // Content-Type: multipart/form-data
             String boundary = contentType.split(";")[1].trim();
@@ -245,6 +248,7 @@ public class RequestHandler extends Thread implements Handler {
             }
             String content = new String(requestBodyData, StandardCharsets.UTF_8);
             String[] contents = content.split("&");
+            //Math.max --> Math.min
             for (int i = 0; i < Math.min(3, contents.length); i++) {
                 args[i] = contents[i].split("=")[1];
             }

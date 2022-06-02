@@ -33,6 +33,7 @@ public class NormalClient extends Client {
     private static ConnectionPool pool = new ConnectionPool();
     private static ClientModifiedCache localCache = new ClientModifiedCache();
     private static String boundary = "kvOEuWu8KBdBKTF5az4Y";
+    private static String RESOURCES_DIR = "src/main/java/client/Resources/";
 
     private NormalClient() {
 
@@ -93,8 +94,8 @@ public class NormalClient extends Client {
         handleGet(inputStream, uri);
     }
 
-    public void uploadFile(String uri, String filepath, boolean persistent) {
-        Path path = Paths.get(filepath);
+    public void uploadFile(String filepath, boolean persistent) {
+        Path path = Paths.get(RESOURCES_DIR + filepath);
         try {
             byte[] bodyBytes = Files.readAllBytes(path);
             StringBuilder sb = new StringBuilder();
@@ -114,7 +115,7 @@ public class NormalClient extends Client {
             System.arraycopy(bodyBytes, 0, bytes, startBytes.length, bodyBytes.length);
             System.arraycopy(endBytes, 0, bytes, startBytes.length + bodyBytes.length, endBytes.length);
             Body body = new Body(bytes);
-            Post(uri, persistent, body);
+            Post("/uploadFile", persistent, body);
         } catch (IOException e) {
             System.out.println("IOExceptions occurs when reading file: " + filepath);
             return;
@@ -142,7 +143,7 @@ public class NormalClient extends Client {
                 //do something
                 requestHeader.put("Content-Type", "application/x-www-form-urlencoded");
                 break;
-            case "upLoadFile":
+            case "/uploadFile":
                 //this is a randomly generated string
                 requestHeader.put("Content-Type", "multipart/form-data; boundary=" + boundary);
                 break;

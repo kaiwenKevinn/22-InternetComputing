@@ -61,10 +61,18 @@ public class postTest {
     }
 
     @Test
-    public void upLoadFile(){
+    public void upLoadHtmlFile(){
         host = "127.0.0.1";
         port = 8888;
         client = new NormalClient(port, host);
+        client.uploadFile("post.html", true);
+    }
 
+    @Test
+    public void upLoadBinaryFile(){
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+        client.uploadFile("4.png", true);
     }
 }
