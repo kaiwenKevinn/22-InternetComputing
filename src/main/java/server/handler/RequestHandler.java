@@ -248,7 +248,7 @@ public class RequestHandler extends Thread implements Handler {
             }
             String content = new String(requestBodyData, StandardCharsets.UTF_8);
             String[] contents = content.split("&");
-            //Math.max --> Math.min
+            //TODO : Math.max --> Math.min?
             for (int i = 0; i < Math.min(3, contents.length); i++) {
                 args[i] = contents[i].split("=")[1];
             }
