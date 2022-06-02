@@ -2,10 +2,9 @@ package client;
 
 import client.cache.ClientModifiedCache;
 import client.cache.ClientRedirectCache;
-import client.cache.LocalStorage;
+import client.handler.ResponseHandler;
 import message.Body;
 import message.header.Header;
-import message.header.RequestHeader;
 import message.header.ResponseHeader;
 import message.request.HttpRequest;
 import message.request.RequestLine;
@@ -13,12 +12,8 @@ import message.response.HttpResponse;
 import message.response.ResponseLine;
 import util.FileUtil;
 import util.MIMETypes;
-import util.OutputStreamHelper;
-import util.TimeUtil;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +33,7 @@ public class NormalClient extends Client {
     private static ConnectionPool pool = new ConnectionPool();
     private static ClientModifiedCache localCache = new ClientModifiedCache();
     private static String boundary = "kvOEuWu8KBdBKTF5az4Y";
+
     private NormalClient() {
 
     }
@@ -45,6 +41,7 @@ public class NormalClient extends Client {
     public NormalClient(int port, String host) {
         this.port = port;
         this.host = host;
+
     }
 
     public void Get(String uri, boolean persistent) throws IOException {
@@ -147,7 +144,7 @@ public class NormalClient extends Client {
                 break;
             case "upLoadFile":
                 //this is a randomly generated string
-                requestHeader.put("ContentType", "multipart/form-data; boundary=" + boundary);
+                requestHeader.put("Content-Type", "multipart/form-data; boundary=" + boundary);
                 break;
         }
     }
@@ -210,17 +207,16 @@ public class NormalClient extends Client {
                 System.out.println("---->>>> body <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
                     String bodyStr = new String(body.getBody());
-                    System.out.println(bodyStr);
+
+                    String storage=FileUtil.createFilePath(receiveMIMEType,uri);
+                    FileUtil.saveTextFile(bodyStr,storage);
                 }
                 else{
                     int lena = response.allInBytes.length;
-                    String postFix= MIMETypes.getMIMELists().getReverseMIMEType(receiveMIMEType);
                     byte[] data = Arrays.copyOfRange(response.allInBytes,
                             (int) (lena - responseHeader.getContentLength()), lena);
-                    String property = System.getProperty("user.dir");
-                    SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss");
-                    String storage=new String(property+File.separator+"data"+File.separator+format.format(Calendar.getInstance().getTime())+postFix);
-                    FileUtil.save(data,storage);
+                    String storage=FileUtil.createFilePath(receiveMIMEType,uri);
+                    FileUtil.saveBinaryFile(data,storage);
                 }
                 break;
             case 301://301 永久重定向

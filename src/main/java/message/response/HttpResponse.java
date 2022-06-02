@@ -1,6 +1,5 @@
 package message.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
 import message.Body;
@@ -11,8 +10,6 @@ import util.MIMETypes;
 import util.StatusCodeAndPhrase;
 
 import java.io.*;
-import java.net.ConnectException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -159,7 +156,7 @@ public class HttpResponse {
     }
 
     public void saveBody(String path) throws IOException {
-        FileUtil.save(messageBody.getBody(), path);
+        FileUtil.saveBinaryFile(messageBody.getBody(), path);
     }
 
     /**
