@@ -93,66 +93,63 @@ public class HttpResponse {
 
     /**
      * @param inputStream
-     * @param method
      * @param inputStream 服务端输入流
      * @throws IOException 客户端基于服务器给的输入流构建response
      */
-    public HttpResponse(InputStream inputStream, String method) throws IOException {
+    public HttpResponse(InputStream inputStream) throws IOException {
         responseLine = new ResponseLine();
         messageHeader = new ResponseHeader();
         messageBody = new Body();
-        if (method.equals("POST")) return;//todo POST请求
 
-        else {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] buffer = new byte[2048];
-            int lenc = 0;
-            while ((lenc = inputStream.read(buffer)) != -1) {
-                baos.write(buffer, 0, lenc);
-                if(lenc < 2048)break;
-            }
-//            BufferedInputStream
-            allInBytes = baos.toByteArray();
-            buffer = baos.toByteArray();
-
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
-
-            //读取响应行;
-            String statusLine = reader.readLine();
-            //System.out.println("debug : " + statusLine);
-            String[] elements = statusLine.split("\\s+");
-            String version = elements[0];
-            int statusCode = Integer.parseInt(elements[1]);
-            int len = elements.length;
-            String[] phrases = Arrays.copyOfRange(elements, 2, len);
-            String description = String.join(" ", phrases);
-
-
-            responseLine = new ResponseLine(statusCode, description);
-            //读取响应头
-            String header = reader.readLine();
-
-            //header 和body之间有""
-            while (!"".equals(header)) {
-                String[] array = header.split(":");
-                String key = array[0].trim(); // 去掉头尾空白符
-                String value = array[1].trim();
-                messageHeader.put(key, value);
-                if (key.equalsIgnoreCase("Content-Length")) {
-                    messageHeader.setContentLength(Long.parseLong(value));
-                }
-                header = reader.readLine();
-            }
-
-            messageBody = new Body(reader, (int) messageHeader.getContentLength());
-
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[2048];
+        int lenc = 0;
+        while ((lenc = inputStream.read(buffer)) != -1) {
+            baos.write(buffer, 0, lenc);
+            if(lenc < 2048)break;
+        }
+//            BufferedInputStream
+        allInBytes = baos.toByteArray();
+        buffer = baos.toByteArray();
+
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buffer)));
+
+        //读取响应行;
+        String statusLine = reader.readLine();
+        //System.out.println("debug : " + statusLine);
+        String[] elements = statusLine.split("\\s+");
+        String version = elements[0];
+        int statusCode = Integer.parseInt(elements[1]);
+        int len = elements.length;
+        String[] phrases = Arrays.copyOfRange(elements, 2, len);
+        String description = String.join(" ", phrases);
+
+
+        responseLine = new ResponseLine(statusCode, description);
+        //读取响应头
+        String header = reader.readLine();
+
+        //header 和body之间有""
+        while (!"".equals(header)) {
+            String[] array = header.split(":");
+            String key = array[0].trim(); // 去掉头尾空白符
+            String value = array[1].trim();
+            messageHeader.put(key, value);
+            if (key.equalsIgnoreCase("Content-Length")) {
+                messageHeader.setContentLength(Long.parseLong(value));
+            }
+            header = reader.readLine();
+        }
+
+        messageBody = new Body(reader, (int) messageHeader.getContentLength());
+
+
     }
 
     public void saveBody(String path) throws IOException {

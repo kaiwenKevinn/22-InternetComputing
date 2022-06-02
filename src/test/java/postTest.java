@@ -15,7 +15,7 @@ import java.net.SocketException;
 public class postTest {
     String host;
     int port = 80;
-    Client client;
+    NormalClient client;
 
     @Test
     public void simpleTestForGet() throws IOException {
@@ -58,5 +58,13 @@ public class postTest {
         writer.write(request);
         writer.flush();
         writer.close();
+    }
+
+    @Test
+    public void upLoadFile(){
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+
     }
 }

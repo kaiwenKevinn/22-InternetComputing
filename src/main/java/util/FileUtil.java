@@ -30,6 +30,7 @@ public class FileUtil {
     }
 
     public static void saveTextFile(String data,String path) throws IOException {
+        if(path.endsWith("/"))path = path + "temp.txt";
         FileWriter writer=new FileWriter(path,false);
         writer.write(data);
         writer.flush();

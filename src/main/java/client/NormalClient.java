@@ -89,8 +89,8 @@ public class NormalClient extends Client {
         if(!persistent)NormalClient.pool.removeConnection(host);
     }
 
-    private void handlePost(InputStream inputStream, String uri){
-
+    private void handlePost(InputStream inputStream, String uri) throws IOException {
+        handleGet(inputStream, uri);
     }
 
     public void uploadFile(String uri, String filepath, boolean persistent) {
@@ -184,7 +184,7 @@ public class NormalClient extends Client {
         System.out.println("====>>>> RECEIVING MESSAGE <<<<===");
         System.out.println("---->>>> header <<<<----");
 
-        HttpResponse response = new HttpResponse(inputStream, "GET");
+        HttpResponse response = new HttpResponse(inputStream);
         ResponseHeader responseHeader = response.getMessageHeader();
         ResponseLine responseLine = response.getResponseLine();
         Body body = response.getMessageBody();
