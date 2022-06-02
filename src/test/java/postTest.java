@@ -42,25 +42,21 @@ public class postTest {
         writer.flush();
         writer.close();
     }
+
     @Test
-    public void loginAndRegister() throws IOException {
+    public void simpleRegisterTest() throws IOException {
         host = "127.0.0.1";
         port = 8888;
-        NormalClient normalClient=new NormalClient(port,host);
-        String request = "POST /testForm HTTP/1.1\n" +
+        Socket socket = new Socket(host, port);
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        String request = "POST /registerOrLogin HTTP/1.1\n" +
                 "Host: 127.0.0.1\n" +
                 "Content-Type: application/x-www-form-urlencoded\n" +
-                "Content-Length: 36\n" +
+                "Content-Length: 39\n" +
                 "\n" +
-                "login=my_login&password=my_password";
-        normalClient.Post("/registerOrLogin",true,new Body(request.getBytes()));
-    }
-    @Test
-    public void upload() throws IOException {
-        host = "127.0.0.1";
-        port = 8888;
-//        Socket socket = new Socket(host, port);
-        NormalClient normalClient=new NormalClient(port,host);
-        normalClient.uploadFile("upLoadFile","src/main/java/client/Resources/2.png",true);
+                "type=register&username=111&password=111\n";
+        writer.write(request);
+        writer.flush();
+        writer.close();
     }
 }

@@ -6,7 +6,7 @@ import java.util.concurrent.locks.Lock;
 
 public abstract class UserServiceProvider {
     protected Lock lock;
-    protected String bindUri;
+    public String bindUri;
 
-    abstract HttpResponseReturnValue handle(String arg1, String arg2, String arg3);
+    abstract public HttpResponseReturnValue handle(String arg1, String arg2, String arg3);
 }
