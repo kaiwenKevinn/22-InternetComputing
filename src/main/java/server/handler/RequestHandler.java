@@ -145,6 +145,7 @@ public class RequestHandler extends Thread implements Handler {
                 cur += line.getBytes().length + System.lineSeparator().getBytes().length;
                 if (cur >= cnt) break;
             }
+
             String bodyStr = sb.toString();
             bodyData = bodyStr.getBytes();
         }
@@ -221,7 +222,6 @@ public class RequestHandler extends Thread implements Handler {
         assert (contentType != null && contentLength != null);
 
         String[] args = new String[3];
-        System.out.println(contentType);
         if (contentType.indexOf(';') != -1) {
             // Content-Type: multipart/form-data
             String boundary = contentType.split(";")[1].trim();

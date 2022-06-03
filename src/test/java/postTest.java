@@ -69,6 +69,14 @@ public class postTest {
     }
 
     @Test
+    public void upLoadTxtFile(){
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+        client.uploadFile("temp.txt", false);
+    }
+
+    @Test
     public void upLoadBinaryFile(){
         host = "127.0.0.1";
         port = 8888;
