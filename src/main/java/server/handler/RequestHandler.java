@@ -5,9 +5,12 @@ import message.header.Header;
 import message.request.HttpRequest;
 import message.request.RequestLine;
 import message.response.HttpResponse;
+import server.HttpResponseReturnValue;
 import server.NormalServer;
 import server.Server;
 import server.redirect.RedirectList;
+import server.usrServices.UserServiceProvider;
+import server.usrServices.UserServicesList;
 import util.FileTable;
 import util.FileUtil;
 import util.MIMETypes;
@@ -65,7 +68,7 @@ public class RequestHandler extends Thread implements Handler {
 
             HttpRequest httpRequest = null;
             try {
-                httpRequest = readRequest(); //todo 修改  第二次读取时在这里会报错
+                httpRequest = readRequest();
             } catch (IOException e) {
                 System.out.println("readRequest() failed, try again");
                 return;
@@ -114,8 +117,9 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-        String[] headers = request.split(System.lineSeparator()); // TODO: bad '\n'
+        String[] headers = request.split(System.lineSeparator());// TODO: bad '\n'
         String startLine = headers[0];
+
         String[] startLineSplit = startLine.split("\\s+");
         String method = startLineSplit[0];
         String uri = startLineSplit[1];
@@ -137,9 +141,11 @@ public class RequestHandler extends Thread implements Handler {
             sb = new StringBuilder();
             while ((line = inFromClient.readLine()) != null) {
                 sb.append(line).append(System.lineSeparator());
-                cur += line.length();
+                //TODO : a char accounts for 2 bytes in Java?
+                cur += line.getBytes().length + System.lineSeparator().getBytes().length;
                 if (cur >= cnt) break;
             }
+
             String bodyStr = sb.toString();
             bodyData = bodyStr.getBytes();
         }
@@ -214,6 +220,8 @@ public class RequestHandler extends Thread implements Handler {
         String contentType = httpRequest.getHeader().get("Content-Type");
         String contentLength = httpRequest.getHeader().get("Content-Length");
         assert (contentType != null && contentLength != null);
+
+        String[] args = new String[3];
         if (contentType.indexOf(';') != -1) {
             // Content-Type: multipart/form-data
             String boundary = contentType.split(";")[1].trim();
@@ -221,17 +229,15 @@ public class RequestHandler extends Thread implements Handler {
             assert ("multipart/form-data".equals(contentType));
             assert (boundary.startsWith("boundary="));
             boundary = boundary.substring("boundary=".length());
-            // TODO
+            // TODO: only support /uploadFile, 2 args
             String[] bodyLines = new String(httpRequest.messageBody.getBody()).split(System.lineSeparator());
             assert (("--" + boundary).equals(bodyLines[0]));
-            for (int i = 1; i < bodyLines.length; i++) {
-
+            args[0] = bodyLines[3];
+            args[1] = "";
+            for (int i = 7; i < bodyLines.length; i++) {
+                if (bodyLines[i].equals("--" + boundary + "--")) break;
+                args[1] += bodyLines[i];
             }
-
-            statusCode = 200;
-            location = BIND_DIR + POST_SUCCESS_RES;
-            bodyData = getBodyDataFromFile(location);
-            assert (bodyData != null);
         } else {
             // Content-Type: application/x-www-form-urlencoded
             assert ("application/x-www-form-urlencoded".equals(contentType));
@@ -241,18 +247,30 @@ public class RequestHandler extends Thread implements Handler {
                 requestBodyData[i] = httpRequest.messageBody.getBody()[i];
             }
             String content = new String(requestBodyData, StandardCharsets.UTF_8);
-            String[] args = new String[3];
-            for (String arg : args) {
-                arg = arg.split("=")[1];
+            String[] contents = content.split("&");
+            //TODO : Math.max --> Math.min?
+            for (int i = 0; i < Math.min(3, contents.length); i++) {
+                args[i] = contents[i].split("=")[1];
             }
-
-            statusCode = 200;
-            location = BIND_DIR + POST_SUCCESS_RES; // !warning: reuse variable 'location', bad practice
-            bodyData = getBodyDataFromFile(location);
-            assert (bodyData != null);
         }
-        Long modifiedTime = getFileTable.getModifiedTime(location);
-        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime);
+        boolean handled = false;
+        HttpResponseReturnValue retVal = null;
+        for (UserServiceProvider service : Server.services.getServiceProviders()) {
+            if (service.bindUri.equals(uri)) {
+                handled = true;
+                retVal = service.handle(args[0], args[1], args[2]);
+                break;
+            }
+        }
+        if (!handled) {
+            statusCode = 404;
+            location = BIND_DIR + NOT_FOUND_RES;
+        } else {
+            statusCode = retVal.statusCode;
+            location = retVal.location;
+        }
+        bodyData = getBodyDataFromFile(location);
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData));
         return httpResponse;
     }
 

@@ -2,7 +2,7 @@ package client;
 
 import client.cache.ClientModifiedCache;
 import client.cache.ClientRedirectCache;
-import client.cache.LocalStorage;
+import client.handler.ResponseHandler;
 import message.Body;
 import message.header.Header;
 import message.header.ResponseHeader;
@@ -12,10 +12,11 @@ import message.response.HttpResponse;
 import message.response.ResponseLine;
 import util.FileUtil;
 import util.MIMETypes;
-import util.OutputStreamHelper;
-import util.TimeUtil;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -31,6 +32,9 @@ public class NormalClient extends Client {
     private static HashMap<String, String> redirectCache = new ClientRedirectCache().getLocalStorage();
     private static ConnectionPool pool = new ConnectionPool();
     private static ClientModifiedCache localCache = new ClientModifiedCache();
+    private static String boundary = "kvOEuWu8KBdBKTF5az4Y";
+    private static String RESOURCES_DIR = "src/main/java/client/Resources/";
+
     private NormalClient() {
 
     }
@@ -38,6 +42,7 @@ public class NormalClient extends Client {
     public NormalClient(int port, String host) {
         this.port = port;
         this.host = host;
+
     }
 
     public void Get(String uri, boolean persistent) throws IOException {
@@ -54,25 +59,94 @@ public class NormalClient extends Client {
 
         //发送http请求
         OutputStream socketOut = conn.getSendStream();
-        socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
-
+        //===>socketOut.write(OutputStreamHelper.toBytesFromLineAndHeader(request.requestLine.method, request.requestLine.requestURI, request.requestLine.version, request.Header.getHeader()));
+        //感觉上面这样有点不好复用
+        socketOut.write(request.toBytes());
         //处理返回请求
         InputStream inputStream = conn.getRecvStream();
         handleGet(inputStream, uri);
         if(!persistent)NormalClient.pool.removeConnection(host);
     }
 
-    /**
-     * @param uri
-     * @return 封装request，方法为GET
-     */
-    private HttpRequest encapsulateRequest(String uri, boolean persistent) {
-        RequestLine requestLine = new RequestLine("GET", uri);
-        Header requestHeader = new Header();
+    public void Post(String uri, boolean persistent, Body body) throws IOException {
+        Connection conn = null;
+
+        try {
+            conn = pool.getConnection(host, port, persistent);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //encapsulate post request
+        HttpRequest request = encapsulatePostRequest(uri, persistent, body);
+
+        OutputStream socketOut = conn.getSendStream();
+        //send to server
+        socketOut.write(request.toBytes());
+
+        InputStream inputStream = conn.getRecvStream();
+
+        handlePost(inputStream, uri);
+
+        if(!persistent)NormalClient.pool.removeConnection(host);
+    }
+
+    private void handlePost(InputStream inputStream, String uri) throws IOException {
+        handleGet(inputStream, uri);
+
+    }
+    public boolean RegisterOrLogin(String input, boolean persistent) throws IOException {
+        byte[] bodyBytes=input.getBytes();
+        Body body = new Body(bodyBytes);
+        try {
+            Post("/registerOrLogin", persistent, body);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        FileReader fileReader=new FileReader( "src/main/java/client/Resources/registerOrLogin");
+        BufferedReader bufferedReader=new BufferedReader(fileReader);
+        String s;
+       while (!(s = bufferedReader.readLine()).isEmpty()){
+           if(s.contains("Successfully")){
+               return true;
+           }
+           if(s.contains("Fail")){
+               return false;
+           }
+       }
+        return false;
+    }
+    public void uploadFile(String filepath, boolean persistent) {
+        Path path = Paths.get(RESOURCES_DIR + filepath);
+        try {
+            byte[] bodyBytes = Files.readAllBytes(path);
+            StringBuilder sb = new StringBuilder();
+            sb.append("--").append(boundary).append(System.lineSeparator());
+            sb.append("Content-Disposition: form-data; name=\"filename\"").append(System.lineSeparator());
+            sb.append(System.lineSeparator());
+            sb.append(filepath).append(System.lineSeparator());
+            sb.append("--").append(boundary).append(System.lineSeparator());
+            sb.append("Content-Disposition: application/jpeg; name=\"data\"").append(System.lineSeparator());
+            sb.append(System.lineSeparator());
+            StringBuilder end = new StringBuilder();
+            end.append(System.lineSeparator()).append("--").append(boundary).append("--").append(System.lineSeparator());
+            byte[] startBytes = sb.toString().getBytes();
+            byte[] endBytes = end.toString().getBytes();
+            byte[] bytes = new byte[startBytes.length + bodyBytes.length + endBytes.length];
+            System.arraycopy(startBytes, 0, bytes, 0, startBytes.length);
+            System.arraycopy(bodyBytes, 0, bytes, startBytes.length, bodyBytes.length);
+            System.arraycopy(endBytes, 0, bytes, startBytes.length + bodyBytes.length, endBytes.length);
+            Body body = new Body(bytes);
+            Post("/uploadFile", persistent, body);
+        } catch (IOException e) {
+            System.out.println("IOExceptions occurs when reading file: " + filepath);
+            return;
+        }
+    }
+
+    private void setCommonHeader(Header requestHeader, boolean persistent){
         requestHeader.put("Accept", "*/*");
         requestHeader.put("Accept-Language", "zh-cn");
         requestHeader.put("User-Agent", "2022-HTTPClient");
-
         if (port != 80 && port != 443) {
             requestHeader.put("Host", host + ':' + port);
         } else {
@@ -82,6 +156,41 @@ public class NormalClient extends Client {
             requestHeader.put("Connection", "Keep-Alive");
             requestHeader.put("Keep-Alive", "timeout=120");
         } else requestHeader.put("Connection", "close");
+    }
+
+    private void setHeaderByUri(String uri, Header requestHeader){
+        switch(uri){
+            case "/registerOrLogin":
+                //do something
+                requestHeader.put("Content-Type", "application/x-www-form-urlencoded");
+                break;
+            case "/uploadFile":
+                //this is a randomly generated string
+                requestHeader.put("Content-Type", "multipart/form-data; boundary=" + boundary);
+                break;
+        }
+    }
+
+    private HttpRequest encapsulatePostRequest(String uri, boolean persistent, Body body){
+        RequestLine requestLine = new RequestLine("POST", uri);
+        Header requestHeader = new Header();
+        setCommonHeader(requestHeader, persistent);
+
+        setHeaderByUri(uri, requestHeader);
+        int len = body.getBody().length - System.lineSeparator().length();
+        requestHeader.put("Content-Length", String.valueOf(len));
+        HttpRequest request = new HttpRequest(requestLine, requestHeader, body);
+        return request;
+    }
+
+    /**
+     * @param uri
+     * @return 封装request，方法为GET
+     */
+    private HttpRequest encapsulateRequest(String uri, boolean persistent) {
+        RequestLine requestLine = new RequestLine("GET", uri);
+        Header requestHeader = new Header();
+        setCommonHeader(requestHeader, persistent);
 
         HttpRequest request = new HttpRequest(requestLine, requestHeader, null);
 
@@ -97,12 +206,13 @@ public class NormalClient extends Client {
         System.out.println("====>>>> RECEIVING MESSAGE <<<<===");
         System.out.println("---->>>> header <<<<----");
 
-        HttpResponse response = new HttpResponse(inputStream, "GET");
+        HttpResponse response = new HttpResponse(inputStream);
         ResponseHeader responseHeader = response.getMessageHeader();
         ResponseLine responseLine = response.getResponseLine();
         Body body = response.getMessageBody();
 
-        String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
+        //String toBePrint = new String(OutputStreamHelper.toBytesFromLineAndHeader(responseLine.version, String.valueOf(responseLine.statusCode), responseLine.description, responseHeader.getHeader()));
+        String toBePrint = response.getResponseLine().toString() + response.getMessageHeader().toString();
         System.out.println(toBePrint);
         String receiveMIMEType = responseHeader.getHeader().get("Content-Type");
         boolean persistent = "Keep-Alive".equals(responseHeader.getHeader().get("Connection"));
@@ -110,27 +220,28 @@ public class NormalClient extends Client {
             case 404://未找到
                 System.out.println("---->>>> body <<<<----");
                 System.out.println(new String(body.getBody()));
+
                 break;
             case 500:// 服务器down掉了
                 System.out.println("---->>>> body <<<<----");
                 System.out.println(new String(body.getBody()));
+
                 break;
             case 200: //成功
-                System.out.println("---->>>> body <<<<----");
+                System.out.println("---->>>> 发送请求成功，数据已保存 <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
                     String bodyStr = new String(body.getBody());
-                    System.out.println(bodyStr);
+                    String storage=FileUtil.createFilePath(receiveMIMEType,uri);
+                    FileUtil.saveTextFile(bodyStr,storage);
                 }
                 else{
                     int lena = response.allInBytes.length;
-                    String postFix= MIMETypes.getMIMELists().getReverseMIMEType(receiveMIMEType);
                     byte[] data = Arrays.copyOfRange(response.allInBytes,
                             (int) (lena - responseHeader.getContentLength()), lena);
-                    String property = System.getProperty("user.dir");
-                    SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss");
-                    String storage=new String(property+File.separator+"data"+File.separator+format.format(Calendar.getInstance().getTime())+postFix);
-                    FileUtil.save(data,storage);
+                    String storage=FileUtil.createFilePath(receiveMIMEType,uri);
+                    FileUtil.saveBinaryFile(data,storage);
                 }
+
                 break;
             case 301://301 永久重定向
                 String trueURI = responseHeader.get("Location");
@@ -165,4 +276,7 @@ public class NormalClient extends Client {
             }
         }
     }
+
+
+
 }

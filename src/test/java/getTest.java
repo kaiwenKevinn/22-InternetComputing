@@ -14,14 +14,6 @@ public class getTest {
 
 
     @Test
-    public void simpleTestForGet() throws IOException {
-        host = "www.example.com";
-        client = new NormalClient(port, host);
-        String uri = "/";
-        client.Get(uri, false);
-    }
-
-    @Test
     public void baiduGetTest() throws IOException {
         try {
             host = "www.baidu.com";

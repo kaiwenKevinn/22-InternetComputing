@@ -35,7 +35,7 @@ public class FileUploadProvider extends UserServiceProvider {
         byte[] bytes = arg2.getBytes(StandardCharsets.UTF_8);
         fileTable.modify(fileName); // !warning: deadlock
         try {
-            FileUtil.save(bytes, ServerMain.BIND_DIR + "/" + fileName);
+            FileUtil.saveBinaryFile(bytes, ServerMain.BIND_DIR + "/" + fileName);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

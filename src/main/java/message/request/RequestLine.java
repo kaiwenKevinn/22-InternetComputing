@@ -20,4 +20,13 @@ public class RequestLine {
         this.method=method;
         requestURI=uri;
     }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(method).append(' ');
+        sb.append(requestURI).append(' ');
+        sb.append(version).append(System.lineSeparator());
+        return sb.toString();
+    }
 }
