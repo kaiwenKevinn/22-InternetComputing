@@ -92,8 +92,29 @@ public class NormalClient extends Client {
 
     private void handlePost(InputStream inputStream, String uri) throws IOException {
         handleGet(inputStream, uri);
-    }
 
+    }
+    public boolean RegisterOrLogin(String input, boolean persistent) throws IOException {
+        byte[] bodyBytes=input.getBytes();
+        Body body = new Body(bodyBytes);
+        try {
+            Post("/registerOrLogin", persistent, body);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        FileReader fileReader=new FileReader( "src/main/java/client/Resources/registerOrLogin");
+        BufferedReader bufferedReader=new BufferedReader(fileReader);
+        String s;
+       while (!(s = bufferedReader.readLine()).isEmpty()){
+           if(s.contains("Successfully")){
+               return true;
+           }
+           if(s.contains("Fail")){
+               return false;
+           }
+       }
+        return false;
+    }
     public void uploadFile(String filepath, boolean persistent) {
         Path path = Paths.get(RESOURCES_DIR + filepath);
         try {
@@ -199,16 +220,17 @@ public class NormalClient extends Client {
             case 404://未找到
                 System.out.println("---->>>> body <<<<----");
                 System.out.println(new String(body.getBody()));
+
                 break;
             case 500:// 服务器down掉了
                 System.out.println("---->>>> body <<<<----");
                 System.out.println(new String(body.getBody()));
+
                 break;
             case 200: //成功
-                System.out.println("---->>>> body <<<<----");
+                System.out.println("---->>>> 发送请求成功，数据已保存 <<<<----");
                 if (receiveMIMEType.substring(0, 4).equals("text")) {
                     String bodyStr = new String(body.getBody());
-
                     String storage=FileUtil.createFilePath(receiveMIMEType,uri);
                     FileUtil.saveTextFile(bodyStr,storage);
                 }
@@ -219,6 +241,7 @@ public class NormalClient extends Client {
                     String storage=FileUtil.createFilePath(receiveMIMEType,uri);
                     FileUtil.saveBinaryFile(data,storage);
                 }
+
                 break;
             case 301://301 永久重定向
                 String trueURI = responseHeader.get("Location");
@@ -253,4 +276,7 @@ public class NormalClient extends Client {
             }
         }
     }
+
+
+
 }

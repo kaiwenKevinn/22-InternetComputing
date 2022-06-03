@@ -30,6 +30,12 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
         lock.lock();
         String type = arg1, username = arg2, password = arg3;
         HttpResponseReturnValue ret = null;
+        if(type.equals("register/login")){
+            if(userInfo.containsKey(username))type="login";
+            else {
+                type="register";
+            }
+        }
         if ("register".equals(type)) {
             boolean registerRet = register(username, password);
             if (!registerRet) ret = new HttpResponseReturnValue(200, ServerMain.BIND_DIR + REGISTER_FAIL_DIR);

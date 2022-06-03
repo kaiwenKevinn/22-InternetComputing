@@ -34,7 +34,7 @@ public class postTest {
         String request = "POST /testForm HTTP/1.1\n" +
                 "Host: 127.0.0.1\n" +
                 "Content-Type: application/x-www-form-urlencoded\n" +
-                "Content-Length: 36\n" +
+                "Content-Length: 35\n" +
                 "\n" +
                 "login=my_login&password=my_password";
 
@@ -82,5 +82,17 @@ public class postTest {
         port = 8888;
         client = new NormalClient(port, host);
         client.uploadFile("4.png", true);
+    }
+
+    @Test public void RegisterOrLogin(){
+        host = "127.0.0.1";
+        port = 8888;
+        client = new NormalClient(port, host);
+        String input="type=register/login&username="+"userName"+"&password="+"pwd"+System.lineSeparator();
+        try {
+            client.RegisterOrLogin(input,true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
