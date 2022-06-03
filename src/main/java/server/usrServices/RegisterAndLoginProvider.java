@@ -21,6 +21,7 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
 
     /**
      * 处理登陆或注册的消息
+     *
      * @param arg1 "register" or "login"
      * @param arg2 username
      * @param arg3 password
@@ -30,10 +31,10 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
         lock.lock();
         String type = arg1, username = arg2, password = arg3;
         HttpResponseReturnValue ret = null;
-        if(type.equals("register/login")){
-            if(userInfo.containsKey(username))type="login";
+        if (type.equals("register/login")) {
+            if (userInfo.containsKey(username)) type = "login";
             else {
-                type="register";
+                type = "register";
             }
         }
         if ("register".equals(type)) {
@@ -54,6 +55,7 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
 
     /**
      * 尝试注册
+     *
      * @param username
      * @param password
      * @return false：用户已存在; true: 成功创建用户
@@ -66,6 +68,7 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
 
     /**
      * 尝试登陆
+     *
      * @param username
      * @param password
      * @return 登陆失败 / 成功

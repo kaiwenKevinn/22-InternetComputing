@@ -177,7 +177,7 @@ public class NormalClient extends Client {
         setCommonHeader(requestHeader, persistent);
 
         setHeaderByUri(uri, requestHeader);
-        int len = body.getBody().length - System.lineSeparator().length();
+        int len = body.getBody().length - System.lineSeparator().getBytes().length;
         requestHeader.put("Content-Length", String.valueOf(len));
         HttpRequest request = new HttpRequest(requestLine, requestHeader, body);
         return request;

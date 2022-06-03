@@ -117,7 +117,7 @@ public class RequestHandler extends Thread implements Handler {
         }
         if (sb.toString().equals("")) return null;
         String request = sb.toString();
-        String[] headers = request.split(System.lineSeparator());// TODO: bad '\n'
+        String[] headers = request.split(System.lineSeparator());
         String startLine = headers[0];
 
         String[] startLineSplit = startLine.split("\\s+");
@@ -236,7 +236,7 @@ public class RequestHandler extends Thread implements Handler {
             args[1] = "";
             for (int i = 7; i < bodyLines.length; i++) {
                 if (bodyLines[i].equals("--" + boundary + "--")) break;
-                args[1] += bodyLines[i];
+                args[1] += bodyLines[i] + System.lineSeparator();
             }
         } else {
             // Content-Type: application/x-www-form-urlencoded
