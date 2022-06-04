@@ -1,10 +1,5 @@
-package client;
-
-import message.Body;
-import message.header.Header;
-import message.request.HttpRequest;
-import message.request.RequestLine;
-import message.response.HttpResponse;
+import client.NormalClient;
+import org.junit.Test;
 import util.TextDecoration;
 
 import java.io.BufferedReader;
@@ -16,8 +11,13 @@ import java.util.Locale;
  * @author Kevin
  * @Description
  */
-public class ClientMain {
-    public static void main(String[] args) throws IOException {
+public class ClientMainTest {
+    /**
+     * @throws IOException
+     * todo 客户端get文件之后，更改之后提交服务端，还想要得到该资源，服务端返回304而不是200
+     */
+    @Test
+    public void April6th() throws IOException {
         int port=8888;
         String host="127.0.0.1";
 
@@ -27,8 +27,8 @@ public class ClientMain {
 
         boolean success = client.RegisterOrLogin(input, true);
         while (!success){
-             input = TextDecoration.registerAndLogin();
-             success = client.RegisterOrLogin(input, true);
+            input = TextDecoration.registerAndLogin();
+            success = client.RegisterOrLogin(input, true);
         }
         BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
         String cmd="";
@@ -44,7 +44,8 @@ public class ClientMain {
                     "POST /registerOrLogin(重新登录)");
             System.out.println("输入end结束程序");
             System.out.println(TextDecoration.Head);
-            cmd= bf.readLine();
+//            cmd= bf.readLine();
+            cmd="POST /uploadFile";
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
                 case "GET":
@@ -55,7 +56,8 @@ public class ClientMain {
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");
                         System.out.println(TextDecoration.Head);
-                        String fileName= bf.readLine();
+//                        String fileName= bf.readLine();
+                        String fileName="post.html";
                         client.uploadFile(fileName,false);
                     }
                 case "END":
@@ -74,7 +76,8 @@ public class ClientMain {
                     "POST /registerOrLogin(重新登录)");
             System.out.println("输入end结束程序");
             System.out.println(TextDecoration.Head);
-            cmd= bf.readLine();
+//            cmd= bf.readLine();
+            cmd="POST /uploadFile";
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
                 case "GET":
@@ -85,7 +88,8 @@ public class ClientMain {
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");
                         System.out.println(TextDecoration.Head);
-                        String fileName= bf.readLine();
+//                        String fileName= bf.readLine();
+                        String fileName="post.html";
                         client.uploadFile(fileName,true);
                     }
                     if(cmds[1].equals("/registerOrLogin")){
@@ -106,9 +110,5 @@ public class ClientMain {
         }
 
     }
-
-
-
-}
-
+    }
 

@@ -12,6 +12,7 @@ import message.response.HttpResponse;
 import message.response.ResponseLine;
 import util.FileUtil;
 import util.MIMETypes;
+import util.TextDecoration;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -107,9 +108,22 @@ public class NormalClient extends Client {
         String s;
        while (!(s = bufferedReader.readLine()).isEmpty()){
            if(s.contains("Successfully")){
+               if(s.contains("Register")){
+                   System.out.println(TextDecoration.Head);
+                   System.out.println("注册成功！");
+                   System.out.println(TextDecoration.Head);
+               }
+               else if(s.contains("Login")){
+                   System.out.println(TextDecoration.Head);
+                   System.out.println("登录成功！");
+                   System.out.println(TextDecoration.Head);
+               }
                return true;
            }
            if(s.contains("Fail")){
+               System.out.println(TextDecoration.Head);
+               System.out.println("您输入的密码有误，请重试或者重新注册账号！");
+               System.out.println(TextDecoration.Head);
                return false;
            }
        }

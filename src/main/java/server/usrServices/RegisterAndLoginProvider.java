@@ -76,6 +76,6 @@ public class RegisterAndLoginProvider extends UserServiceProvider {
     private boolean login(String username, String password) {
         if (!userInfo.containsKey(username)) return false;
         if (!userInfo.get(username).equals(password)) return false;
-        return false;
+        return true;
     }
 }
