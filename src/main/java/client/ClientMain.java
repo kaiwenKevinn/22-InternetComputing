@@ -21,7 +21,7 @@ public class ClientMain {
         int port=8888;
         String host="127.0.0.1";
 
-        NormalClient client=new NormalClient(port,host);
+        NormalClient client=new NormalClient(port,host,"POST");
         TextDecoration.welcome();
         String input = TextDecoration.registerAndLogin();
 
@@ -48,10 +48,12 @@ public class ClientMain {
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
                 case "GET":
+                    client.switchMode("GET");
                     client.Get(cmds[1],false);
                     break;
                 case "POST":
-                    if(cmds[1].equals("/uploadFile")){
+                    client.switchMode("POST");
+                if(cmds[1].equals("/uploadFile")){
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");
                         System.out.println(TextDecoration.Head);
@@ -78,9 +80,11 @@ public class ClientMain {
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
                 case "GET":
+                    client.switchMode("GET");
                     client.Get(cmds[1],true);
                     break;
                 case "POST":
+                    client.switchMode("POST");
                     if(cmds[1].equals("/uploadFile")){
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");

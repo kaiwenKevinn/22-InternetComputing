@@ -1,16 +1,10 @@
-import client.Client;
 import client.NormalClient;
-import message.Body;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class postTest {
     String host;
@@ -20,7 +14,7 @@ public class postTest {
     @Test
     public void simpleTestForGet() throws IOException {
         host = "www.example.com";
-        client = new NormalClient(port, host);
+        client = new NormalClient(port, host,"POST");
         String uri = "/";
         client.Get(uri, false);
     }
@@ -64,7 +58,7 @@ public class postTest {
     public void upLoadHtmlFile(){
         host = "127.0.0.1";
         port = 8888;
-        client = new NormalClient(port, host);
+        client = new NormalClient(port, host,"POST");
         client.uploadFile("post.html", true);
     }
 
@@ -72,7 +66,7 @@ public class postTest {
     public void upLoadTxtFile(){
         host = "127.0.0.1";
         port = 8888;
-        client = new NormalClient(port, host);
+        client = new NormalClient(port, host,"POST");
         client.uploadFile("temp.txt", false);
     }
 
@@ -80,14 +74,14 @@ public class postTest {
     public void upLoadBinaryFile(){
         host = "127.0.0.1";
         port = 8888;
-        client = new NormalClient(port, host);
+        client = new NormalClient(port, host,"POST");
         client.uploadFile("4.png", true);
     }
 
     @Test public void RegisterOrLogin(){
         host = "127.0.0.1";
         port = 8888;
-        client = new NormalClient(port, host);
+        client = new NormalClient(port, host,"POST");
         String input="type=register/login&username="+"userName"+"&password="+"pwd"+System.lineSeparator();
         try {
             client.RegisterOrLogin(input,true);

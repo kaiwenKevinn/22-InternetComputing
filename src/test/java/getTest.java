@@ -1,8 +1,5 @@
-import client.Client;
 import client.NormalClient;
 import org.junit.Test;
-import server.NormalServer;
-import server.Server;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -10,7 +7,7 @@ import java.net.SocketException;
 public class getTest {
     String host;
     int port = 80;
-    Client client;
+    NormalClient client;
 
 
     @Test
