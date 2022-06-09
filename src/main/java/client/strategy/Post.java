@@ -12,6 +12,7 @@ import message.request.RequestLine;
 import message.response.HttpResponse;
 import message.response.ResponseLine;
 import util.FileUtil;
+import util.TextDecoration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,8 +44,8 @@ public class Post implements requestMethod{
     }
     @Override
     public void handleResponse(InputStream inputStream, String uri) throws IOException {
-        System.out.println("====>>>> RECEIVING MESSAGE <<<<===");
-        System.out.println("---->>>> header <<<<----");
+        TextDecoration.printPurple("====>>>> RECEIVING MESSAGE <<<<===");
+        TextDecoration.printPurple("---->>>> header <<<<----");
 
         HttpResponse response = new HttpResponse(inputStream);
         ResponseHeader responseHeader = response.getMessageHeader();
@@ -86,19 +87,19 @@ public class Post implements requestMethod{
             case 301://301 永久重定向
                 String trueURI = responseHeader.get("Location");
                 redirectCache.put(host + ':' + port + uri, trueURI);
-                System.out.println("你将被301重定向至" + trueURI);
+                TextDecoration.printRed("你将被301重定向至" + trueURI);
                 sendRequest(trueURI, persistent,new Body()); // 跳转
                 break;
             case 302: // 302临时重定向
                 trueURI = responseHeader.get("Location");
-                System.out.println("你将被302重定向至" + trueURI);
+                TextDecoration.printRed("你将被302重定向至" + trueURI);
                 sendRequest(trueURI, persistent,new Body()); // 跳转
                 break;
             //TODO: untested yet
             case 304://not modified
                 Body localResource = localCache.getLocalResource(host, uri);
                 response.setMessageBody(localResource);
-                System.out.println("Not modified, get resource from local storage...");
+                TextDecoration.printRed("Not modified, get resource from local storage...");
                 break;
         }
         //update local cache if modified
