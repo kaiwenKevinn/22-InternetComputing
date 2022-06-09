@@ -11,10 +11,7 @@ import server.Server;
 import server.redirect.RedirectList;
 import server.usrServices.UserServiceProvider;
 import server.usrServices.UserServicesList;
-import util.FileTable;
-import util.FileUtil;
-import util.MIMETypes;
-import util.StatusCodeAndPhrase;
+import util.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -58,7 +55,7 @@ public class RequestHandler extends Thread implements Handler {
         while (true) {
             if (isTimeout) {
                 try {
-                    System.out.println("Timeout, Socket closed");
+                    TextDecoration.printRed("Timeout, Socket closed");
                     socket.close();
                     return;
                 } catch (IOException e) {
@@ -70,7 +67,7 @@ public class RequestHandler extends Thread implements Handler {
             try {
                 httpRequest = readRequest();
             } catch (IOException e) {
-                System.out.println("readRequest() failed, try again");
+                TextDecoration.printRed("readRequest() failed, try again");
                 return;
             }
 
@@ -94,7 +91,7 @@ public class RequestHandler extends Thread implements Handler {
 
                 // non-persistent connection, break out
                 if (httpRequest.getHeader().get("Connection") == null || !"Keep-Alive".equals(httpRequest.getHeader().get("Connection"))) {
-                    System.out.println("Non-persistent connection closed....");
+                    TextDecoration.printRed("Non-persistent connection closed....");
                     break;
                 }
             }
@@ -163,7 +160,7 @@ public class RequestHandler extends Thread implements Handler {
         try {
             bodyData = FileUtil.readFromFile(location);
         } catch (FileNotFoundException ex) {
-            System.out.println(location + "文件未找到");
+            TextDecoration.printRed(location + "文件未找到");
             return null;
         }
         return bodyData;
@@ -303,7 +300,7 @@ public class RequestHandler extends Thread implements Handler {
     }
 
     private void sendResponse(HttpResponse httpResponse) {
-        System.out.println("---->>>>send response<<<<----");
+      TextDecoration.printGreen("---->>>>send response<<<<----");
         try {
             outToClient.write(httpResponse.toBytes());
         } catch (IOException ex) {
@@ -314,7 +311,7 @@ public class RequestHandler extends Thread implements Handler {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        System.out.println("---->>>>response sended<<<<----");
+        TextDecoration.printGreen("---->>>>response sended<<<<----");
     }
 
 }

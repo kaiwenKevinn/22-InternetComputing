@@ -7,21 +7,11 @@ import client.strategy.Post;
 import client.strategy.requestMethod;
 import lombok.Data;
 import message.Body;
-import message.header.Header;
-import message.header.ResponseHeader;
-import message.request.HttpRequest;
-import message.request.RequestLine;
-import message.response.HttpResponse;
-import message.response.ResponseLine;
-import util.FileUtil;
 import util.TextDecoration;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -91,21 +81,21 @@ public class NormalClient  {
        while (!(s = bufferedReader.readLine()).isEmpty()){
            if(s.contains("Successfully")){
                if(s.contains("Register")){
-                   System.out.println(TextDecoration.Head);
+                   TextDecoration.printBlue(TextDecoration.Head);
                    System.out.println("注册成功！");
-                   System.out.println(TextDecoration.Head);
+                   TextDecoration.printBlue(TextDecoration.Head);
                }
                else if(s.contains("Login")){
-                   System.out.println(TextDecoration.Head);
+                   TextDecoration.printBlue(TextDecoration.Head);
                    System.out.println("登录成功！");
-                   System.out.println(TextDecoration.Head);
+                   TextDecoration.printBlue(TextDecoration.Head);
                }
                return true;
            }
            if(s.contains("Fail")){
-               System.out.println(TextDecoration.Head);
+               TextDecoration.printBlue(TextDecoration.Head);
                System.out.println("您输入的密码有误，请重试或者重新注册账号！");
-               System.out.println(TextDecoration.Head);
+               TextDecoration.printBlue(TextDecoration.Head);
                return false;
            }
        }
