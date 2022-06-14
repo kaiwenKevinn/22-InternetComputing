@@ -71,10 +71,12 @@ public class NormalClient  {
         byte[] bodyBytes=input.getBytes();
         Body body = new Body(bodyBytes);
         try {
+            //调用POST请求发送登录注册的请求
             requestMethod.sendRequest("/registerOrLogin", persistent, body);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //读取服务端传回的结果
         FileReader fileReader=new FileReader( "src/main/java/client/Resources/registerOrLogin");
         BufferedReader bufferedReader=new BufferedReader(fileReader);
         String s;

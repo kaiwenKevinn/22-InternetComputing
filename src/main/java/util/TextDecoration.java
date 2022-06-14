@@ -31,7 +31,6 @@ public class TextDecoration {
     }
     public static final String registerAndLogin() throws IOException {
         BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-
         printBlue("请输入用户名与密码，未注册用户将自动注册");
         printGreen("用户名:");
         String userName = bf.readLine();

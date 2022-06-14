@@ -18,9 +18,9 @@ public class ServerMain {
 
     public static void main(String[] args) {
         try {
-            String hostname = "127.0.0.1"; // to be modified for test
-            int port = 8888; // to be modified for test
-            Server server = new NormalServer(hostname, port); // ? Longlinkserver
+            String hostname = "127.0.0.1";
+            int port = 8888;
+            Server server = new NormalServer(hostname, port);
             server.start(); // note: here duck Exception
         } catch (Exception e) {
             e.printStackTrace();

@@ -11,13 +11,6 @@ public class postTest {
     int port = 80;
     NormalClient client;
 
-    @Test
-    public void simpleTestForGet() throws IOException {
-        host = "www.example.com";
-        client = new NormalClient(port, host,"POST");
-        String uri = "/";
-        client.Get(uri, false);
-    }
 
     @Test
     public void simpleTestForPost() throws IOException {

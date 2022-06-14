@@ -124,6 +124,7 @@ public class Post implements requestMethod{
         Connection conn = null;
 
         try {
+            //从连接池中获取连接
             conn = pool.getConnection(host, port, persistent);
         } catch (IOException e) {
             e.printStackTrace();

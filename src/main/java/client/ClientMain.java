@@ -53,6 +53,7 @@ public class ClientMain {
                     break;
                 case "POST":
                     client.switchMode("POST");
+                    //因为不是长连接，因此不能多次登录或者重新注册
                 if(cmds[1].equals("/uploadFile")){
                     TextDecoration.printBlue(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");

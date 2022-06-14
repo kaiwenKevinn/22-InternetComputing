@@ -14,7 +14,7 @@ import java.util.Locale;
 public class ClientMainTest {
     /**
      * @throws IOException
-     * todo 客户端get文件之后，更改之后提交服务端，还想要得到该资源，服务端返回304而不是200
+     *
      */
     @Test
     public void April6th() throws IOException {
@@ -44,7 +44,6 @@ public class ClientMainTest {
                     "POST /registerOrLogin(重新登录)");
             System.out.println("输入end结束程序");
             System.out.println(TextDecoration.Head);
-//            cmd= bf.readLine();
             cmd="POST /uploadFile";
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
@@ -56,7 +55,6 @@ public class ClientMainTest {
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");
                         System.out.println(TextDecoration.Head);
-//                        String fileName= bf.readLine();
                         String fileName="post.html";
                         client.uploadFile(fileName,false);
                     }
@@ -76,7 +74,6 @@ public class ClientMainTest {
                     "POST /registerOrLogin(重新登录)");
             System.out.println("输入end结束程序");
             System.out.println(TextDecoration.Head);
-//            cmd= bf.readLine();
             cmd="POST /uploadFile";
             String[]cmds=cmd.split(" ");
             switch (cmds[0].toUpperCase(Locale.ROOT)){
@@ -88,7 +85,6 @@ public class ClientMainTest {
                         System.out.println(TextDecoration.Head);
                         System.out.println("请输入您想上传文件的名称 例如:temp.txt");
                         System.out.println(TextDecoration.Head);
-//                        String fileName= bf.readLine();
                         String fileName="post.html";
                         client.uploadFile(fileName,true);
                     }
