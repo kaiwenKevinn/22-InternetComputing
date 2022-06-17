@@ -6,6 +6,7 @@ import java.util.HashMap;
 /**
  * @author Kevin
  * @Description
+ * 实现304的重定向列表
  */
 public class RedirectList {
     //单例模式，使得只有一个重定向列表

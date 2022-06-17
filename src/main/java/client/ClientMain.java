@@ -15,6 +15,7 @@ import java.util.Locale;
 /**
  * @author Kevin
  * @Description
+ * 客户端入口类
  */
 public class ClientMain {
     public static void main(String[] args) throws IOException {
@@ -23,6 +24,7 @@ public class ClientMain {
 
         NormalClient client=new NormalClient(port,host,"POST");
         TextDecoration.welcome();
+        //首次登录系统，强制注册
         String input = TextDecoration.registerAndLogin();
 
         boolean success = client.RegisterOrLogin(input, true);
@@ -37,6 +39,7 @@ public class ClientMain {
         TextDecoration.printGreen("输入true表示需要，否则表示不需要");
         TextDecoration.printBlue(TextDecoration.Head);
         cmd=bf.readLine();
+        //不需要建立长连接，只发送一次请求之后自动关闭连接
         if(!cmd.equals("true")){
             TextDecoration.printBlue(TextDecoration.Head);
             System.out.println("您已经进入短连接，在一次请求之后，客户端程序将终止");
@@ -69,7 +72,7 @@ public class ClientMain {
                     TextDecoration.printBlue(TextDecoration.Head);
             }
         }
-
+        //建立长连接，可循环发送多个请求
         while (!cmd.equals("end")){
             TextDecoration.printBlue(TextDecoration.Head);
             System.out.println("您进入了长连接模式");

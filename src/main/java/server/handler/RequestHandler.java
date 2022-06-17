@@ -18,12 +18,13 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Handler;
 
 import static server.ServerMain.*;
 
-// ckw: client包下的Responsehandler处理的是对从服务器端收到的相应报文做处理，RequestHandler处理的是对即将传递给服务器端的请求报文做处理
 
-public class RequestHandler extends Thread implements Handler {
+
+public class RequestHandler extends Thread  {
     Socket socket;
     private boolean isDown = false; // 模拟服务器挂掉的情况
     private static RedirectList redirectList = RedirectList.getRedirectList();
@@ -49,9 +50,11 @@ public class RequestHandler extends Thread implements Handler {
         getFileTable = new FileTable();
     }
 
+    /**
+     * readRequest() -> handle() -> sendResponse()
+     */
     @Override
     public void run() {
-        // readRequest() -> handle() -> sendResponse()
         while (true) {
             if (isTimeout) {
                 try {
@@ -65,6 +68,7 @@ public class RequestHandler extends Thread implements Handler {
 
             HttpRequest httpRequest = null;
             try {
+                //读取请求
                 httpRequest = readRequest();
             } catch (IOException e) {
                 TextDecoration.printRed("readRequest() failed, try again");
@@ -138,7 +142,7 @@ public class RequestHandler extends Thread implements Handler {
             sb = new StringBuilder();
             while ((line = inFromClient.readLine()) != null) {
                 sb.append(line).append(System.lineSeparator());
-                //TODO : a char accounts for 2 bytes in Java?
+                // a char accounts for 2 bytes in Java
                 cur += line.getBytes().length + System.lineSeparator().getBytes().length;
                 if (cur >= cnt) break;
             }
@@ -155,6 +159,11 @@ public class RequestHandler extends Thread implements Handler {
         return httpRequest;
     }
 
+    /**
+     * @param location
+     * 以二进制方式从指定位置读取文件
+     * @return
+     */
     private byte[] getBodyDataFromFile(String location) {
         byte[] bodyData = new byte[0];
         try {
@@ -187,7 +196,7 @@ public class RequestHandler extends Thread implements Handler {
             Long getTime = getFileTable.getModifiedTime(location);
             Long modifyTime = Server.modifiedFileTable.getModifiedTime(location);
             assert (modifyTime != -1);
-            if (getTime >= modifyTime) {//todo modifyTime一直为-1
+            if (getTime >= modifyTime) {
                 statusCode = 304;
                 location = BIND_DIR + NOT_MODIFIED_RES;
             }
@@ -201,7 +210,7 @@ public class RequestHandler extends Thread implements Handler {
             assert (bodyData != null);
         }
         Long modifiedTime = Server.modifiedFileTable.getModifiedTime(location);
-        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime); // TODO
+        httpResponse = new HttpResponse(statusCode, location, persistent, new Body(bodyData),modifiedTime);
         return httpResponse;
     }
 
@@ -226,7 +235,7 @@ public class RequestHandler extends Thread implements Handler {
             assert ("multipart/form-data".equals(contentType));
             assert (boundary.startsWith("boundary="));
             boundary = boundary.substring("boundary=".length());
-            // TODO: only support /uploadFile, 2 args
+            //  only support /uploadFile, 2 args
             String[] bodyLines = new String(httpRequest.messageBody.getBody()).split(System.lineSeparator());
             assert (("--" + boundary).equals(bodyLines[0]));
             args[0] = bodyLines[3];
@@ -245,7 +254,7 @@ public class RequestHandler extends Thread implements Handler {
             }
             String content = new String(requestBodyData, StandardCharsets.UTF_8);
             String[] contents = content.split("&");
-            //TODO : Math.max --> Math.min?
+
             for (int i = 0; i < Math.min(3, contents.length); i++) {
                 args[i] = contents[i].split("=")[1];
             }
@@ -271,6 +280,11 @@ public class RequestHandler extends Thread implements Handler {
         return httpResponse;
     }
 
+    /**
+     * @param httpRequest
+     * GET请求用getHandler处理 POST请求用postHandler处理 其它请求均返回405
+     * @return
+     */
     private HttpResponse handle(HttpRequest httpRequest) {
         HttpResponse httpResponse = null;
         if (isDown) {

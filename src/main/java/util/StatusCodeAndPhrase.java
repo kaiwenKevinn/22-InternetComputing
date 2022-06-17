@@ -5,6 +5,7 @@ import java.util.HashMap;
 /**
  * @author Kevin
  * @Description
+ * 状态码以及其描述
  */
 
 public class StatusCodeAndPhrase {

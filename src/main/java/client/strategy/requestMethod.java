@@ -12,6 +12,9 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.HashMap;
 
+/**
+ * 抽象策略类
+ */
 public interface requestMethod {
 
 

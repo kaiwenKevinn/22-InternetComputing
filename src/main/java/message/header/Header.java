@@ -49,7 +49,7 @@ public class Header {
                 continue;
             }
             if (!formattedHeader.contains(":")) {
-                //TODO
+
                 continue;
             }
             int index = formattedHeader.indexOf(":");

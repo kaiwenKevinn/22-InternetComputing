@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author Kevin
  * @Description
+ * 请求/响应 体
  */
 @Data
 @ToString

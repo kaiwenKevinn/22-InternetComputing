@@ -10,6 +10,7 @@ import static util.InputStreamHelper.getResAsStream;
 
 /**
  * @author Kevin
+ * 用于读取，存储文件
  * @Description
  */
 public class FileUtil {

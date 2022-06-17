@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 /**
  * @author Kevin
  * @Description
+ * support 301 302 status code
  */
 @Data
 @AllArgsConstructor

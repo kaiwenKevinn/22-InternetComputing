@@ -67,6 +67,13 @@ public class NormalClient  {
     }
 
 
+    /**
+     * @param input
+     * @param persistent
+     * @return
+     * @throws IOException
+     * 登录或者注册方法
+     */
     public boolean RegisterOrLogin(String input, boolean persistent) throws IOException {
         byte[] bodyBytes=input.getBytes();
         Body body = new Body(bodyBytes);
@@ -103,6 +110,12 @@ public class NormalClient  {
        }
         return false;
     }
+
+    /**
+     * @param filepath
+     * @param persistent
+     * 上传文件给服务器端
+     */
     public void uploadFile(String filepath, boolean persistent) {
         Path path = Paths.get(RESOURCES_DIR + filepath);
         try {

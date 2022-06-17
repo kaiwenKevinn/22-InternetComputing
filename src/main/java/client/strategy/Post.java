@@ -24,6 +24,7 @@ import java.util.HashMap;
 /**
  * @author Kevin
  * @Description
+ * 具体策略类，POST方法发送请求
  */
 public class Post implements requestMethod{
     ConnectionPool pool;
@@ -95,7 +96,7 @@ public class Post implements requestMethod{
                 TextDecoration.printRed("你将被302重定向至" + trueURI);
                 sendRequest(trueURI, persistent,new Body()); // 跳转
                 break;
-            //TODO: untested yet
+
             case 304://not modified
                 Body localResource = localCache.getLocalResource(host, uri);
                 response.setMessageBody(localResource);

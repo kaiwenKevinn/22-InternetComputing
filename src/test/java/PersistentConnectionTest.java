@@ -19,4 +19,12 @@ public class PersistentConnectionTest {
         sendRequest(uri, true);
         sendRequest(uri, true);
     }
+    @Test
+    public void RedirectTest() throws IOException {
+        String uri = "/301origin.html";
+        sendRequest(uri, true);
+        uri="/302origin.html";
+        sendRequest(uri, true);
+        
+    }
 }

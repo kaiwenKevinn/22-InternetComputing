@@ -7,10 +7,11 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-//TODO: untested yet
+
 /**
  * @author sunlifan
  * @date 2022/5/31
+ * support 304 status code
  */
 public class ClientModifiedCache {
     private HashMap<String, LocalStorage> localCache = new LinkedHashMap<>();
