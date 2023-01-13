@@ -94,7 +94,7 @@ public class NormalClient  {
                    System.out.println("注册成功！");
                    TextDecoration.printBlue(TextDecoration.Head);
                }
-               else if(s.contains("Login")){
+               else if(s.contains("login")){//todo
                    TextDecoration.printBlue(TextDecoration.Head);
                    System.out.println("登录成功！");
                    TextDecoration.printBlue(TextDecoration.Head);

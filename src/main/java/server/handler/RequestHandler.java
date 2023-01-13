@@ -26,7 +26,7 @@ import static server.ServerMain.*;
 
 public class RequestHandler extends Thread  {
     Socket socket;
-    private boolean isDown = false; // 模拟服务器挂掉的情况
+    private boolean isDown = true; // 模拟服务器挂掉的情况
     private static RedirectList redirectList = RedirectList.getRedirectList();
     private static MIMETypes MIMEList = MIMETypes.getMIMELists();
     private static StatusCodeAndPhrase statusCodeList = StatusCodeAndPhrase.getStatusCodeList();

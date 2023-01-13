@@ -38,5 +38,6 @@ public class NormalServer extends Server {
             RequestHandler handler = new RequestHandler(socket); // for multi-thread usage
             handler.start();
         }
+
     }
 }
